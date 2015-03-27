@@ -56,7 +56,7 @@ import java.util.concurrent.TimeUnit;
 
 
 public class PedoActivity extends ActionBarActivity {
-    public final static String EXTRA_MESSAGE = "com.pedometer.tommzy.pedometer.MESSAGE";
+//    public final static String EXTRA_MESSAGE = "com.pedometer.tommzy.pedometer.MESSAGE";
     private GoogleApiClient mClient = null;
     public static final String TAG = "BasicSensorsApi";
 
@@ -293,15 +293,15 @@ public class PedoActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /** Called when the user clicks the Send button */
-    public void sendMessage(View view) {
-        // Do something in response to button
-        Intent intent = new Intent(this, DisplayMessageActivity.class);
-        EditText editText = (EditText) findViewById(R.id.edit_message);
-        String message = editText.getText().toString();
-        intent.putExtra(EXTRA_MESSAGE, message);
-        startActivity(intent);
-    }
+//    /** Called when the user clicks the Send button */
+//    public void sendMessage(View view) {
+//        // Do something in response to button
+//        Intent intent = new Intent(this, DisplayMessageActivity.class);
+//        EditText editText = (EditText) findViewById(R.id.edit_message);
+//        String message = editText.getText().toString();
+//        intent.putExtra(EXTRA_MESSAGE, message);
+//        startActivity(intent);
+//    }
 
     // [START auth_connection_flow_in_activity_lifecycle_methods]
     @Override
