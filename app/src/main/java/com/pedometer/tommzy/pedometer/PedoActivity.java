@@ -32,6 +32,7 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -56,7 +57,7 @@ import java.util.concurrent.TimeUnit;
 
 
 public class PedoActivity extends ActionBarActivity {
-//    public final static String EXTRA_MESSAGE = "com.pedometer.tommzy.pedometer.MESSAGE";
+    //    public final static String EXTRA_MESSAGE = "com.pedometer.tommzy.pedometer.MESSAGE";
     private GoogleApiClient mClient = null;
     public static final String TAG = "BasicSensorsApi";
 
@@ -68,7 +69,8 @@ public class PedoActivity extends ActionBarActivity {
 
     private static final int REQUEST_OAUTH = 1;
 
-    private int previousValue;
+    private TextView stepTextView=null;
+    private int dailyStepCount = 0;
 
     /**
      *  Track whether an authorization activity is stacking over the current activity, i.e. when
@@ -84,6 +86,8 @@ public class PedoActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pedo);
+
+        stepTextView = (TextView) findViewById(R.id.daily_step_count);
 
 //        initializeLogging();
 
@@ -211,8 +215,7 @@ public class PedoActivity extends ActionBarActivity {
                     Value val = dataPoint.getValue(field);
                     Log.i(TAG, "Detected DataPoint field: " + field.getName());
                     Log.i(TAG, "Detected DataPoint value: " + val);
-//                    Log.i(TAG, "Difference in steps: " + (val.asInt()-previousValue));
-//                    previousValue = val.asInt();
+                    updateViewStepCounter(val.asInt());
                 }
             }
         };
@@ -293,15 +296,6 @@ public class PedoActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-//    /** Called when the user clicks the Send button */
-//    public void sendMessage(View view) {
-//        // Do something in response to button
-//        Intent intent = new Intent(this, DisplayMessageActivity.class);
-//        EditText editText = (EditText) findViewById(R.id.edit_message);
-//        String message = editText.getText().toString();
-//        intent.putExtra(EXTRA_MESSAGE, message);
-//        startActivity(intent);
-//    }
 
     // [START auth_connection_flow_in_activity_lifecycle_methods]
     @Override
@@ -315,7 +309,7 @@ public class PedoActivity extends ActionBarActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (mClient.isConnected()) {
+        if (mClient.isConnected()||mClient.isConnecting()) {
             mClient.disconnect();
         }
     }
@@ -340,22 +334,18 @@ public class PedoActivity extends ActionBarActivity {
     }
     // [END auth_connection_flow_in_activity_lifecycle_methods]
 
-//    /**
-//     *  Initialize a custom log class that outputs both to in-app targets and logcat.
-//     */
-//    private void initializeLogging() {
-//        // Wraps Android's native log framework.
-//        LogWrapper logWrapper = new LogWrapper();
-//        // Using Log, front-end to the logging chain, emulates android.util.log method signatures.
-//        Log.setLogNode(logWrapper);
-//        // Filter strips out everything except the message text.
-//        MessageOnlyLogFilter msgFilter = new MessageOnlyLogFilter();
-//        logWrapper.setNext(msgFilter);
-//        // On screen logging via a customized TextView.
-//        LogView logView = (LogView) findViewById(R.id.sample_logview);
-//        logView.setTextAppearance(this, R.style.Log);
-//        logView.setBackgroundColor(Color.WHITE);
-//        msgFilter.setNext(logView);
-//        Log.i(TAG, "Ready");
-//    }
+
+    protected void updateViewStepCounter(int count){
+        dailyStepCount = count + dailyStepCount;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                stepTextView.setText(String.valueOf(dailyStepCount));
+                Log.i(TAG, "current steps: " + dailyStepCount);
+            }
+        });
+//        stepTextView.setText(String.valueOf(dailyStepCount));
+//        Log.i(TAG, "current steps: " + dailyStepCount);
+    }
+
 }
