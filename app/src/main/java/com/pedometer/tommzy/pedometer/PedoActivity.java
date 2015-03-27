@@ -68,6 +68,8 @@ public class PedoActivity extends ActionBarActivity {
 
     private static final int REQUEST_OAUTH = 1;
 
+    private int previousValue;
+
     /**
      *  Track whether an authorization activity is stacking over the current activity, i.e. when
      *  a known auth error is being resolved, such as showing the account chooser or presenting a
@@ -92,6 +94,8 @@ public class PedoActivity extends ActionBarActivity {
         // Create the Google API Client
         mClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.SENSORS_API)
+                .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
+                .addScope(new Scope(Scopes.FITNESS_BODY_READ_WRITE))
                 .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
                 .addConnectionCallbacks(
                         new GoogleApiClient.ConnectionCallbacks() {
@@ -163,27 +167,30 @@ public class PedoActivity extends ActionBarActivity {
      * where the {@link com.google.android.gms.fitness.request.SensorRequest} contains the desired data type.
      */
     private void findFitnessDataSources() {
+
         // [START find_data_sources]
         Fitness.SensorsApi.findDataSources(mClient, new DataSourcesRequest.Builder()
                 // At least one datatype must be specified.
-                .setDataTypes(DataType.TYPE_LOCATION_SAMPLE)
+//                .setDataTypes(DataType.TYPE_STEP_COUNT_DELTA)
+                .setDataTypes(DataType.TYPE_STEP_COUNT_DELTA)
                         // Can specify whether data type is raw or derived.
-                .setDataSourceTypes(DataSource.TYPE_RAW)
+                .setDataSourceTypes(DataSource.TYPE_DERIVED)
                 .build())
                 .setResultCallback(new ResultCallback<DataSourcesResult>() {
                     @Override
                     public void onResult(DataSourcesResult dataSourcesResult) {
                         Log.i(TAG, "Result: " + dataSourcesResult.getStatus().toString());
+                        Log.i(TAG, "Result: " + dataSourcesResult.getClass().getName());
                         for (DataSource dataSource : dataSourcesResult.getDataSources()) {
                             Log.i(TAG, "Data source found: " + dataSource.toString());
                             Log.i(TAG, "Data Source type: " + dataSource.getDataType().getName());
 
                             //Let's register a listener to receive Activity data!
-                            if (dataSource.getDataType().equals(DataType.TYPE_LOCATION_SAMPLE)
+                            if (dataSource.getDataType().equals(DataType.TYPE_STEP_COUNT_DELTA)
                                     && mListener == null) {
-                                Log.i(TAG, "Data source for LOCATION_SAMPLE found!  Registering.");
+                                Log.i(TAG, "Data source for TYPE_STEP_COUNT_DELTA found!  Registering.");
                                 registerFitnessDataListener(dataSource,
-                                        DataType.TYPE_LOCATION_SAMPLE);
+                                        DataType.TYPE_STEP_COUNT_DELTA);
                             }
                         }
                     }
@@ -204,6 +211,8 @@ public class PedoActivity extends ActionBarActivity {
                     Value val = dataPoint.getValue(field);
                     Log.i(TAG, "Detected DataPoint field: " + field.getName());
                     Log.i(TAG, "Detected DataPoint value: " + val);
+//                    Log.i(TAG, "Difference in steps: " + (val.asInt()-previousValue));
+//                    previousValue = val.asInt();
                 }
             }
         };
@@ -213,7 +222,7 @@ public class PedoActivity extends ActionBarActivity {
                 new SensorRequest.Builder()
                         .setDataSource(dataSource) // Optional but recommended for custom data sets.
                         .setDataType(dataType) // Can't be omitted.
-                        .setSamplingRate(10, TimeUnit.SECONDS)
+                        .setSamplingRate(1, TimeUnit.SECONDS)
                         .build(),
                 mListener)
                 .setResultCallback(new ResultCallback<Status>() {
