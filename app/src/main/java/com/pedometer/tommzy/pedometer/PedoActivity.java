@@ -57,20 +57,17 @@ import java.util.concurrent.TimeUnit;
 
 
 public class PedoActivity extends ActionBarActivity {
-    //    public final static String EXTRA_MESSAGE = "com.pedometer.tommzy.pedometer.MESSAGE";
+    // public final static String EXTRA_MESSAGE = "com.pedometer.tommzy.pedometer.MESSAGE";
     private GoogleApiClient mClient = null;
-    public static final String TAG = "BasicSensorsApi";
-
+    public static final String TAG = "StepSensorsApi";
+    private static final int REQUEST_OAUTH = 1;
+    private TextView stepTextView=null;
+    private int dailyStepCount = 0;
     // [START mListener_variable_reference]
     // Need to hold a reference to this listener, as it's passed into the "unregister"
     // method in order to stop all sensors from sending data to this listener.
     private OnDataPointListener mListener;
     // [END mListener_variable_reference]
-
-    private static final int REQUEST_OAUTH = 1;
-
-    private TextView stepTextView=null;
-    private int dailyStepCount = 0;
 
     /**
      *  Track whether an authorization activity is stacking over the current activity, i.e. when
@@ -81,15 +78,12 @@ public class PedoActivity extends ActionBarActivity {
     private boolean authInProgress = false;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pedo);
-
+        //select the part of the view that need update
         stepTextView = (TextView) findViewById(R.id.daily_step_count);
-
-//        initializeLogging();
 
         if (savedInstanceState != null) {
             authInProgress = savedInstanceState.getBoolean(AUTH_PENDING);
@@ -228,6 +222,7 @@ public class PedoActivity extends ActionBarActivity {
                         .setSamplingRate(1, TimeUnit.SECONDS)
                         .build(),
                 mListener)
+                //TODO Check whether the listener is registered for multiple times or not
                 .setResultCallback(new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
