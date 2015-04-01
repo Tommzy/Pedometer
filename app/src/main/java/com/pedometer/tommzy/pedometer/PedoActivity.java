@@ -23,6 +23,8 @@ import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.request.DataSourcesRequest;
 import com.google.android.gms.fitness.request.OnDataPointListener;
 import com.google.android.gms.fitness.result.DataSourcesResult;
+//circleprogeess
+import com.github.lzyzsd.circleprogress.DonutProgress;
 
 
 import android.content.Intent;
@@ -62,6 +64,7 @@ public class PedoActivity extends ActionBarActivity {
     public static final String TAG = "StepSensorsApi";
     private static final int REQUEST_OAUTH = 1;
     private TextView stepTextView=null;
+    private DonutProgress donutView=null;
     private int dailyStepCount = 0;
     // [START mListener_variable_reference]
     // Need to hold a reference to this listener, as it's passed into the "unregister"
@@ -77,6 +80,10 @@ public class PedoActivity extends ActionBarActivity {
     private static final String AUTH_PENDING = "auth_state_pending";
     private boolean authInProgress = false;
 
+    private DonutProgress donutProgress;
+
+    public int aim;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,17 +91,20 @@ public class PedoActivity extends ActionBarActivity {
         setContentView(R.layout.activity_pedo);
         //select the part of the view that need update
         stepTextView = (TextView) findViewById(R.id.daily_step_count);
+        donutView = (DonutProgress) findViewById(R.id.donut_progress);
 
         if (savedInstanceState != null) {
             authInProgress = savedInstanceState.getBoolean(AUTH_PENDING);
         }
 
+        //TODO: change aim to dynamic
+        aim = 300;
         // Create the Google API Client
         mClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.SENSORS_API)
                 .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
-                .addScope(new Scope(Scopes.FITNESS_BODY_READ_WRITE))
-                .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
+//                .addScope(new Scope(Scopes.FITNESS_BODY_READ_WRITE))
+//                .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
                 .addConnectionCallbacks(
                         new GoogleApiClient.ConnectionCallbacks() {
 
@@ -222,7 +232,6 @@ public class PedoActivity extends ActionBarActivity {
                         .setSamplingRate(1, TimeUnit.SECONDS)
                         .build(),
                 mListener)
-                //TODO Check whether the listener is registered for multiple times or not
                 .setResultCallback(new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
@@ -336,6 +345,9 @@ public class PedoActivity extends ActionBarActivity {
             @Override
             public void run() {
                 stepTextView.setText(String.valueOf(dailyStepCount));
+                int persentageNoCast=dailyStepCount*100/aim;
+                Log.i(TAG, "persentage increamental results: "+ persentageNoCast);
+                donutView.setProgress(persentageNoCast);
                 Log.i(TAG, "current steps: " + dailyStepCount);
             }
         });
