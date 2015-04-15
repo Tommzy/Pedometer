@@ -1,4 +1,4 @@
-<!-- A DrawerLayout is intended to be used as the top-level content view using match_parent for both width and height to consume the full space available. -->
+<?xml version="1.0" encoding="utf-8"?>
 <android.support.v4.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:custom="http://schemas.android.com/apk/res-auto"
@@ -6,60 +6,49 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-
-
-    <!-- As the main content view, the view below consumes the entire
-            space available using match_parent in both dimensions. -->
-    <FrameLayout
-        android:id="@+id/content_frame"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-
-
-    <!-- android:layout_gravity="start" tells DrawerLayout to treat
-         this as a sliding drawer on the left side for left-to-right
-         languages and on the right side for right-to-left languages.
-         The drawer is given a fixed width in dp and extends the full height of
-         the container. A solid background is used for contrast
-         with the content view. -->
-    <ListView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:custom="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/left_drawer"
-        android:layout_width="240dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:choiceMode="singleChoice"
-        android:divider="@android:color/transparent"
-        android:dividerHeight="0dp"
-        android:background="#00FFFF"/>
-
-    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/daily_step_count"
-                android:textSize="70sp"
-                android:text="0"
-                android:textColor="#66FF33"
-                android:gravity="center_horizontal"
-                android:layout_gravity="bottom"
-                android:layout_marginBottom="70dp"
-                android:layout_weight="1" />
-    </LinearLayout>
+        android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_vertical">
 
     <com.github.lzyzsd.circleprogress.DonutProgress
-        android:id="@+id/donut_progress"
-        android:layout_marginTop="100dp"
-        android:layout_marginBottom="220dp"
-        android:layout_marginRight="100dp"
-        android:layout_marginLeft="100dp"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        custom:donut_finished_color="#FF6600"
-        custom:donut_max="100"
-        custom:donut_progress="0"/>
+                android:id="@+id/donut_progress"
+                android:layout_width="243dp"
+                android:layout_height="243dp"
+                custom:donut_finished_color="#FF6600"
+                custom:donut_max="100"
+                custom:donut_progress="0"
+                android:layout_gravity="center" />
 
-</android.support.v4.widget.DrawerLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/daily_step_count"
+        android:textSize="70sp"
+        android:text="0"
+        android:textColor="#66FF33"
+        android:gravity="center_horizontal"
+        android:layout_gravity="center" />
+</LinearLayout>
+
+    <!-- android:layout_gravity="start" tells DrawerLayout to treat
+     this as a sliding drawer on the left side for left-to-right
+     languages and on the right side for right-to-left languages.
+     The drawer is given a fixed width in dp and extends the full height of
+     the container. A solid background is used for contrast
+     with the content view. -->
+<ListView xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:tools="http://schemas.android.com/tools"
+android:id="@+id/left_drawer"
+android:layout_width="240dp"
+android:layout_height="match_parent"
+android:layout_gravity="start"
+android:choiceMode="singleChoice"
+android:divider="@android:color/transparent"
+android:dividerHeight="0dp"
+android:background="#00FFFF"/>
+
+    </android.support.v4.widget.DrawerLayout>

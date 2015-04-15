@@ -2,4 +2,15 @@
     <string name="app_name">Pedometer</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="drawer_menu">Activity Menu</string>
+
+    //navigation drawer list
+    <string-array name="functions_array">
+        <item>Pedometer</item>
+        <item>Activities</item>
+        <item>Settings</item>
+    </string-array>
+
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
 </resources>

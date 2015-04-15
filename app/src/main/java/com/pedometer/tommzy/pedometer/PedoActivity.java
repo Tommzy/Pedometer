@@ -2,13 +2,12 @@ package com.pedometer.tommzy.pedometer;
 
 import android.content.Intent;
 import android.content.IntentSender;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+
+
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.EditText;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -26,39 +25,17 @@ import com.google.android.gms.fitness.result.DataSourcesResult;
 //circleprogeess
 import com.github.lzyzsd.circleprogress.DonutProgress;
 
-
-import android.content.Intent;
-import android.content.IntentSender;
-import android.graphics.Color;
-import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.TextView;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.Scopes;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.fitness.Fitness;
-import com.google.android.gms.fitness.data.DataPoint;
-import com.google.android.gms.fitness.data.DataSource;
-import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.data.Value;
-import com.google.android.gms.fitness.request.DataSourcesRequest;
-import com.google.android.gms.fitness.request.OnDataPointListener;
 import com.google.android.gms.fitness.request.SensorRequest;
-import com.google.android.gms.fitness.result.DataSourcesResult;
 
 import java.util.concurrent.TimeUnit;
 
 
-public class PedoActivity extends ActionBarActivity {
+public class PedoActivity extends BaseActivity {
     // public final static String EXTRA_MESSAGE = "com.pedometer.tommzy.pedometer.MESSAGE";
     private GoogleApiClient mClient = null;
     public static final String TAG = "StepSensorsApi";
@@ -72,6 +49,8 @@ public class PedoActivity extends ActionBarActivity {
     private OnDataPointListener mListener;
     // [END mListener_variable_reference]
 
+    private CharSequence mTitle;
+
     /**
      *  Track whether an authorization activity is stacking over the current activity, i.e. when
      *  a known auth error is being resolved, such as showing the account chooser or presenting a
@@ -80,6 +59,7 @@ public class PedoActivity extends ActionBarActivity {
     private static final String AUTH_PENDING = "auth_state_pending";
     private boolean authInProgress = false;
 
+    //initiate the donut progress bar
     private DonutProgress donutProgress;
 
     public int aim;
@@ -91,7 +71,9 @@ public class PedoActivity extends ActionBarActivity {
         setContentView(R.layout.activity_pedo);
         //select the part of the view that need update
         stepTextView = (TextView) findViewById(R.id.daily_step_count);
+        //instantiate the donutView
         donutView = (DonutProgress) findViewById(R.id.donut_progress);
+
 
         if (savedInstanceState != null) {
             authInProgress = savedInstanceState.getBoolean(AUTH_PENDING);
@@ -353,6 +335,14 @@ public class PedoActivity extends ActionBarActivity {
         });
 //        stepTextView.setText(String.valueOf(dailyStepCount));
 //        Log.i(TAG, "current steps: " + dailyStepCount);
+    }
+
+
+
+    @Override
+    public void setTitle(CharSequence title) {
+        mTitle = title;
+        getActionBar().setTitle(mTitle);
     }
 
 }
