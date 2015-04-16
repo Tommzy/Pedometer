@@ -1,10 +1,17 @@
 package com.pedometer.tommzy.pedometer;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.res.Configuration;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 
 
+import android.os.Trace;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,6 +23,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.fitness.Fitness;
+import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSource;
 import com.google.android.gms.fitness.data.DataType;
@@ -34,6 +42,8 @@ import com.google.android.gms.fitness.request.SensorRequest;
 
 import java.util.concurrent.TimeUnit;
 
+import static android.util.FloatMath.sqrt;
+
 
 public class PedoActivity extends BaseActivity {
     // public final static String EXTRA_MESSAGE = "com.pedometer.tommzy.pedometer.MESSAGE";
@@ -48,8 +58,14 @@ public class PedoActivity extends BaseActivity {
     // method in order to stop all sensors from sending data to this listener.
     private OnDataPointListener mListener;
     // [END mListener_variable_reference]
+    private boolean firstConnect = true;
 
     private CharSequence mTitle;
+
+    private boolean initspead;
+    private long lastEvent;
+
+
 
     /**
      *  Track whether an authorization activity is stacking over the current activity, i.e. when
@@ -62,7 +78,59 @@ public class PedoActivity extends BaseActivity {
     //initiate the donut progress bar
     private DonutProgress donutProgress;
 
+    private SensorManager sm;
+
     public int aim;
+
+    //Accerlate sensor
+    /*
+     * SensorEventListener接口的实现，需要实现两个方法
+     * 方法1 onSensorChanged 当数据变化的时候被触发调用
+     * 方法2 onAccuracyChanged 当获得数据的精度发生变化的时候被调用，比如突然无法获得数据时
+     * */
+    final SensorEventListener myAccelerometerListener = new SensorEventListener(){
+
+        //复写onSensorChanged方法
+        public void onSensorChanged(SensorEvent sensorEvent){
+            if(sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
+//                Log.i(TAG,"onSensorChanged");
+
+                //图解中已经解释三个值的含义
+                float X_lateral = sensorEvent.values[0];
+                float Y_longitudinal = sensorEvent.values[1];
+                float Z_vertical = sensorEvent.values[2];
+//                Log.i(TAG,"\n heading "+X_lateral);
+//                Log.i(TAG,"\n pitch "+Y_longitudinal);
+//                Log.i(TAG,"\n roll "+Z_vertical);
+
+                long now;
+                long interval;
+                now = System.currentTimeMillis();
+                interval = now-lastEvent;
+                lastEvent=now;
+
+                float speed = 0;
+                float linearAccelerate;
+                linearAccelerate = sqrt(X_lateral * X_lateral + Y_longitudinal * Y_longitudinal);
+
+                if(initspead){
+                    speed = linearAccelerate*interval/1000;
+//                    Log.i(TAG,"\n Time Interval "+interval);
+//                    Log.i(TAG,"\n Current speed "+speed);
+                    if(speed > 5.6 ){
+                        Log.i(TAG,"You Are Running!");
+                    }
+                }else{
+                    speed = speed + linearAccelerate*interval;
+                    Log.i(TAG,"\n Current speed "+speed);
+                }
+            }
+        }
+        //复写onAccuracyChanged方法
+        public void onAccuracyChanged(Sensor sensor , int accuracy){
+            Log.i(TAG, "onAccuracyChanged");
+        }
+    };
 
 
     @Override
@@ -74,6 +142,8 @@ public class PedoActivity extends BaseActivity {
         //instantiate the donutView
         donutView = (DonutProgress) findViewById(R.id.donut_progress);
 
+        initspead=true;//init spead = 0
+
 
         if (savedInstanceState != null) {
             authInProgress = savedInstanceState.getBoolean(AUTH_PENDING);
@@ -84,8 +154,8 @@ public class PedoActivity extends BaseActivity {
         // Create the Google API Client
         mClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.SENSORS_API)
+                .addApi(Fitness.RECORDING_API)
                 .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
-//                .addScope(new Scope(Scopes.FITNESS_BODY_READ_WRITE))
 //                .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
                 .addConnectionCallbacks(
                         new GoogleApiClient.ConnectionCallbacks() {
@@ -97,8 +167,14 @@ public class PedoActivity extends BaseActivity {
                                 // Put application specific code here.
                                 // [END auth_build_googleapiclient_beginning]
                                 //  What to do? Find some data sources!
-                                findFitnessDataSources();
-
+//                                if (firstConnect) {
+                                    findFitnessDataSources();
+                                    subscribeFitnessData();
+                                    firstConnect = false;
+//                                    Log.i(TAG, "First connect! Regester Everything!");
+//                                } else {
+//                                    Log.i(TAG, "just resumed...");
+//                                }
                                 // [START auth_build_googleapiclient_ending]
                             }
 
@@ -144,6 +220,17 @@ public class PedoActivity extends BaseActivity {
                         }
                 )
                 .build();
+        //make an sensor manager to get system service
+        sm = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
+
+        //initiate the ACCELEROMETER
+        int sensorType = Sensor.TYPE_ACCELEROMETER;
+
+        //register a listener at here
+        sm.registerListener(myAccelerometerListener,
+                sm.getDefaultSensor(sensorType),
+                SensorManager.SENSOR_DELAY_NORMAL);
+        lastEvent=System.currentTimeMillis();//initiate the current time for acceleration
 
 
     }
@@ -187,6 +274,28 @@ public class PedoActivity extends BaseActivity {
                 });
         // [END find_data_sources]
     }
+
+
+    private void subscribeFitnessData(){
+
+        Fitness.RecordingApi.subscribe(mClient, DataType.TYPE_STEP_COUNT_DELTA)
+                .setResultCallback(new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(Status status) {
+                        if (status.isSuccess()) {
+                            if (status.getStatusCode()
+                                    == FitnessStatusCodes.SUCCESS_ALREADY_SUBSCRIBED) {
+                                Log.i(TAG, "Existing subscription for activity detected.");
+                            } else {
+                                Log.i(TAG, "Successfully subscribed!");
+                            }
+                        } else {
+                            Log.i(TAG, "There was a problem subscribing.");
+                        }
+                    }
+                });
+    }
+
 
     /**
      * Register a listener with the Sensors API for the provided {@link DataSource} and
@@ -343,6 +452,12 @@ public class PedoActivity extends BaseActivity {
     public void setTitle(CharSequence title) {
         mTitle = title;
         getActionBar().setTitle(mTitle);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+//        setContentView(R.layout.activity_pedo);
     }
 
 }
