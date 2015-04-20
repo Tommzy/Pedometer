@@ -1,7 +1,10 @@
 package com.pedometer.tommzy.pedometer;
 
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.res.Configuration;
 import android.hardware.Sensor;
@@ -39,10 +42,13 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.data.Value;
 import com.google.android.gms.fitness.request.SensorRequest;
+import com.google.android.gms.location.ActivityRecognition;
 
 import java.util.concurrent.TimeUnit;
 
 import static android.util.FloatMath.sqrt;
+
+
 
 
 public class PedoActivity extends BaseActivity {
@@ -81,6 +87,8 @@ public class PedoActivity extends BaseActivity {
     private SensorManager sm;
 
     public int aim;
+
+    private BroadcastReceiver receiver;
 
     //Accerlate sensor
     /*
@@ -141,6 +149,8 @@ public class PedoActivity extends BaseActivity {
         stepTextView = (TextView) findViewById(R.id.daily_step_count);
         //instantiate the donutView
         donutView = (DonutProgress) findViewById(R.id.donut_progress);
+        Intent i = new Intent(this, ActivityRecognitionIntentService.class);
+        final PendingIntent mActivityRecognitionPendingIntent = PendingIntent.getService(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
 
         initspead=true;//init spead = 0
 
@@ -155,6 +165,7 @@ public class PedoActivity extends BaseActivity {
         mClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.SENSORS_API)
                 .addApi(Fitness.RECORDING_API)
+                .addApi(ActivityRecognition.API)
                 .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
 //                .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
                 .addConnectionCallbacks(
@@ -170,6 +181,9 @@ public class PedoActivity extends BaseActivity {
 //                                if (firstConnect) {
                                     findFitnessDataSources();
                                     subscribeFitnessData();
+                                    ActivityRecognition
+                                            .ActivityRecognitionApi
+                                            .requestActivityUpdates(mClient, 0, mActivityRecognitionPendingIntent);
                                     firstConnect = false;
 //                                    Log.i(TAG, "First connect! Regester Everything!");
 //                                } else {
@@ -231,6 +245,30 @@ public class PedoActivity extends BaseActivity {
                 sm.getDefaultSensor(sensorType),
                 SensorManager.SENSOR_DELAY_NORMAL);
         lastEvent=System.currentTimeMillis();//initiate the current time for acceleration
+
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("Activity_Message");
+        //Setup the boradcast receiver
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                //do something based on the intent's action
+                String action = intent.getAction();
+                if(action.equalsIgnoreCase("Activity_Message")){
+                    Bundle extra = intent.getExtras();
+                    String username = extra.getString("ActivityType");
+                    Log.i(TAG, username);
+
+
+                }
+            }
+        };
+        registerReceiver(receiver, filter);
+
+        mClient.connect();
+
+
 
 
     }
@@ -397,8 +435,10 @@ public class PedoActivity extends BaseActivity {
     protected void onStart() {
         super.onStart();
         // Connect to the Fitness API
-        Log.i(TAG, "Connecting...");
-        mClient.connect();
+        Log.i(TAG, "Validating connection ...");
+        if (!mClient.isConnecting() && !mClient.isConnected()) {
+            mClient.connect();
+        }
     }
 
     @Override
