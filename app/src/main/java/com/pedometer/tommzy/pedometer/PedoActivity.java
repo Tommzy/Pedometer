@@ -126,7 +126,7 @@ public class PedoActivity extends BaseActivity {
 //                    Log.i(TAG,"\n Time Interval "+interval);
 //                    Log.i(TAG,"\n Current speed "+speed);
                     if(speed > 5.6 ){
-                        Log.i(TAG,"You Are Running!");
+                        Log.i(TAG,"Depends on accelerating sensor: You Are Running!");
                     }
                 }else{
                     speed = speed + linearAccelerate*interval;
@@ -259,6 +259,7 @@ public class PedoActivity extends BaseActivity {
                     Bundle extra = intent.getExtras();
                     String username = extra.getString("ActivityType");
                     Log.i(TAG, username);
+
 
 
                 }

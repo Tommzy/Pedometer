@@ -38,7 +38,7 @@ public class ActivityRecognitionIntentService extends IntentService {
                 }
             }
 
-            Log.i("inSerice the activity dectetect is : ", getNameFromType(type));
+            Log.i("Activity dectetected : ", getNameFromType(type));
 
             Intent mIntent = new Intent("Activity_Message")
                     .putExtra("ActivityType", getNameFromType(type));
@@ -54,8 +54,10 @@ public class ActivityRecognitionIntentService extends IntentService {
             if (activity.getType() != DetectedActivity.RUNNING && activity.getType() != DetectedActivity.WALKING)
                 continue;
 
-            if (activity.getConfidence() > confidence)
+            if (activity.getConfidence() > confidence) {
                 myActivity = activity;
+                break;
+            }
         }
 
         return myActivity;
