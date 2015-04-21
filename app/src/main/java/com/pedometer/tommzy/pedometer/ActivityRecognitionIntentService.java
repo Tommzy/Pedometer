@@ -77,8 +77,19 @@ public class ActivityRecognitionIntentService extends IntentService {
                 return "unknown";
             case DetectedActivity.TILTING:
                 return "tilting";
+            case DetectedActivity.RUNNING:
+                return "running";
+            case DetectedActivity.WALKING:
+                return "walking";
         }
         return "unknown";
+    }
+
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        stopSelf();
     }
 
 

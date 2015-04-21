@@ -26,6 +26,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.fitness.Fitness;
+import com.google.android.gms.fitness.FitnessActivities;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataPoint;
 import com.google.android.gms.fitness.data.DataSource;
@@ -44,6 +45,7 @@ import com.google.android.gms.fitness.data.Value;
 import com.google.android.gms.fitness.request.SensorRequest;
 import com.google.android.gms.location.ActivityRecognition;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static android.util.FloatMath.sqrt;
@@ -71,6 +73,10 @@ public class PedoActivity extends BaseActivity {
     private boolean initspead;
     private long lastEvent;
 
+    private String currentActivity=null;
+    private long latestSessionTime=0;
+    private String identifier=null;
+
 
 
     /**
@@ -89,6 +95,10 @@ public class PedoActivity extends BaseActivity {
     public int aim;
 
     private BroadcastReceiver receiver;
+
+    private SessionApiManager sessionApiManager;
+    private HistoryApiManager historyApiManager;
+    private RecordApiManager recordApiManager;
 
     //Accerlate sensor
     /*
@@ -161,13 +171,20 @@ public class PedoActivity extends BaseActivity {
 
         //TODO: change aim to dynamic
         aim = 300;
+
+
         // Create the Google API Client
         mClient = new GoogleApiClient.Builder(this)
                 .addApi(Fitness.SENSORS_API)
                 .addApi(Fitness.RECORDING_API)
+                .addApi(Fitness.HISTORY_API)
+                .addApi(Fitness.SESSIONS_API)
                 .addApi(ActivityRecognition.API)
                 .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ))
-//                .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
+//               .addScope(new Scope(Scopes.FITNESS_LOCATION_READ))
+                .addScope(new Scope(Scopes.FITNESS_ACTIVITY_READ_WRITE))
+                .addScope(new Scope(Scopes.FITNESS_BODY_READ_WRITE))
+                .addScope(new Scope(Scopes.FITNESS_LOCATION_READ_WRITE))
                 .addConnectionCallbacks(
                         new GoogleApiClient.ConnectionCallbacks() {
 
@@ -179,12 +196,12 @@ public class PedoActivity extends BaseActivity {
                                 // [END auth_build_googleapiclient_beginning]
                                 //  What to do? Find some data sources!
 //                                if (firstConnect) {
-                                    findFitnessDataSources();
-                                    subscribeFitnessData();
-                                    ActivityRecognition
-                                            .ActivityRecognitionApi
-                                            .requestActivityUpdates(mClient, 0, mActivityRecognitionPendingIntent);
-                                    firstConnect = false;
+                                findFitnessDataSources();
+                                subscribeFitnessData();
+                                ActivityRecognition
+                                        .ActivityRecognitionApi
+                                        .requestActivityUpdates(mClient, 0, mActivityRecognitionPendingIntent);
+                                firstConnect = false;
 //                                    Log.i(TAG, "First connect! Regester Everything!");
 //                                } else {
 //                                    Log.i(TAG, "just resumed...");
@@ -247,6 +264,12 @@ public class PedoActivity extends BaseActivity {
         lastEvent=System.currentTimeMillis();//initiate the current time for acceleration
 
 
+        historyApiManager=new HistoryApiManager(mClient);
+        recordApiManager=new RecordApiManager(mClient);
+        sessionApiManager=new SessionApiManager(mClient);
+
+
+
         IntentFilter filter = new IntentFilter();
         filter.addAction("Activity_Message");
         //Setup the boradcast receiver
@@ -257,8 +280,25 @@ public class PedoActivity extends BaseActivity {
                 String action = intent.getAction();
                 if(action.equalsIgnoreCase("Activity_Message")){
                     Bundle extra = intent.getExtras();
-                    String username = extra.getString("ActivityType");
-                    Log.i(TAG, username);
+                    String activityType = extra.getString("ActivityType");
+                    Log.i(TAG, activityType);
+
+                    if((!activityType.equalsIgnoreCase("unknown"))
+                            &&(!activityType.equalsIgnoreCase("still"))
+                            &&(!activityType.equalsIgnoreCase("tilting"))){
+
+                        if(getActivityType(activityType)!=null){
+                            setUpSession(getActivityType(activityType));
+                        }else{
+                            Log.i("Returned Null!!!!!",activityType);
+                        }
+
+                    }else{
+                        if(currentActivity!=null) {
+                            stopCurrentSession();
+                            currentActivity=null;
+                        }
+                    }
 
 
 
@@ -273,6 +313,25 @@ public class PedoActivity extends BaseActivity {
 
 
     }
+
+    private String getActivityType(String activityType) {
+        switch (activityType){
+            case "in_vehicle":
+                return FitnessActivities.IN_VEHICLE;
+            case "on_bicycle":
+                return FitnessActivities.BIKING;
+            case "running":
+                return FitnessActivities.RUNNING;
+            case "walking":
+                return FitnessActivities.WALKING;
+            case "on_foot":
+                return FitnessActivities.ON_FOOT;
+        }
+
+
+        return null;
+    }
+
 
     /**
      * Find available data sources and attempt to register on a specific {@link DataType}.
@@ -488,6 +547,34 @@ public class PedoActivity extends BaseActivity {
     }
 
 
+    private void setUpSession(String activityType) {
+        long currentDate = new Date().getTime();
+        if(currentActivity==null){
+            Log.i("In setUpSession activity", activityType);
+            Log.i("In setUpSession startTime",String.valueOf(currentDate));
+            identifier = sessionApiManager.startSession(currentDate,activityType);
+            currentActivity=activityType;
+            latestSessionTime=currentDate;
+        }else{
+            if(!currentActivity.equalsIgnoreCase(activityType)){
+
+                Log.i("Stopping session", identifier.toString());
+                sessionApiManager.stopSession(identifier, currentActivity);
+
+                Log.i("In setUpSession activity", activityType);
+                Log.i("In setUpSession startTime", String.valueOf(currentDate));
+                identifier = sessionApiManager.startSession(currentDate,activityType);
+                currentActivity=activityType;
+                latestSessionTime=currentDate;
+            }
+        }
+    }
+
+    private void stopCurrentSession(){
+        sessionApiManager.stopSession(identifier, currentActivity);
+    }
+
+
 
     @Override
     public void setTitle(CharSequence title) {
@@ -499,6 +586,11 @@ public class PedoActivity extends BaseActivity {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 //        setContentView(R.layout.activity_pedo);
+    }
+
+    @Override
+    public void onDestroy(){
+        stopService(new Intent(PedoActivity.this,ActivityRecognitionIntentService.class));
     }
 
 }
