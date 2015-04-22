@@ -39,14 +39,36 @@ public class HistoryApiManager {
 
     public HistoryApiManager (GoogleApiClient client) {
         this.mClient = client;
+        getCurrentDate();
+        getCurrentWeek();
     }
 
 
-    public void queryFitnessData(DataType dataType) {
-        getTodayDate();
+    public void queryCurrentDayFitnessData() {
+        getCurrentDate();//update the time
         DataReadRequest dataReadRequest = new DataReadRequest.Builder()
-                .setTimeRange(startTime, endTime, TimeUnit.MILLISECONDS)
-                .read(dataType)
+                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .aggregate(DataType.TYPE_ACTIVITY_SEGMENT, DataType.AGGREGATE_ACTIVITY_SUMMARY)
+                .bucketByTime(1, TimeUnit.DAYS)
+                .setTimeRange(startTime,endTime,TimeUnit.MILLISECONDS)
+                .build();
+
+        Fitness.HistoryApi.readData(mClient, dataReadRequest).setResultCallback(new ResultCallback<DataReadResult>() {
+            @Override
+            public void onResult(DataReadResult dataReadResult) {
+                Log.i(TAG, "queryFitnessData()");
+                printData(dataReadResult);
+            }
+        });
+    }
+
+    public void queryCurrentWeekFitnessData() {
+        getCurrentWeek();//update the time
+        DataReadRequest dataReadRequest = new DataReadRequest.Builder()
+                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+                .aggregate(DataType.TYPE_ACTIVITY_SEGMENT, DataType.AGGREGATE_ACTIVITY_SUMMARY)
+                .bucketByTime(1, TimeUnit.DAYS)
+                .setTimeRange(startBucketTime,endBucketTime,TimeUnit.MILLISECONDS)
                 .build();
 
         Fitness.HistoryApi.readData(mClient, dataReadRequest).setResultCallback(new ResultCallback<DataReadResult>() {
@@ -102,7 +124,7 @@ public class HistoryApiManager {
         String TAG = "dumpDataSet";
 
         Log.i(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
 
         for (DataPoint dp : dataSet.getDataPoints()) {
             Log.i(TAG, "\tType: " + dp.getDataType().getName());
@@ -114,8 +136,28 @@ public class HistoryApiManager {
     }
 
 
-    private void getTodayDate(){
+    private void getCurrentDate(){
 
+        Calendar cal = Calendar.getInstance();
+        Calendar startOfDay = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        endTime = cal.getTimeInMillis();
+        startOfDay.set(Calendar.HOUR_OF_DAY,0);
+        startOfDay.set(Calendar.MINUTE, 0);
+        startOfDay.set(Calendar.SECOND, 0);
+        startOfDay.set(Calendar.MILLISECOND, 0);
+        startTime = startOfDay.getTimeInMillis();
+
+    }
+
+    private void getCurrentWeek(){
+        Calendar cal = Calendar.getInstance();
+        Date now = new Date();
+        cal.setTime(now);
+        endBucketTime = cal.getTimeInMillis();
+        cal.add(Calendar.WEEK_OF_YEAR, -1);
+        startBucketTime = cal.getTimeInMillis();
     }
 
 

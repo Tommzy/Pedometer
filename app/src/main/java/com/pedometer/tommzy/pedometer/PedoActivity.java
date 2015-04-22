@@ -198,6 +198,7 @@ public class PedoActivity extends BaseActivity {
 //                                if (firstConnect) {
                                 findFitnessDataSources();
                                 subscribeFitnessData();
+                                retrieveFitnessData();
                                 ActivityRecognition
                                         .ActivityRecognitionApi
                                         .requestActivityUpdates(mClient, 0, mActivityRecognitionPendingIntent);
@@ -392,6 +393,12 @@ public class PedoActivity extends BaseActivity {
                         }
                     }
                 });
+    }
+
+
+    public void retrieveFitnessData(){
+        historyApiManager.queryCurrentDayFitnessData();
+//        historyApiManager.queryCurrentWeekFitnessData();
     }
 
 

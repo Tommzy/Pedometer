@@ -53,11 +53,12 @@ public class RecordApiManager {
                                                        Log.i(TAG, "Step / " + "Successfully subscribed!");
                                                    }
 
-                                                   mHistoryMgr.queryFitnessData(step);
-                                                   mHistoryMgr.queryAggregateFitnessData(step, aggregateStep);
+                                                   mHistoryMgr.queryCurrentDayFitnessData();
+//                                                   mHistoryMgr.queryCurrentWeekFitnessData();
+//                                                   mHistoryMgr.queryAggregateFitnessData(step, aggregateStep);
                                                    //TODO: LET HistoryManager update the step view
                                                    //TODO:
-                                                   SessionApiManager sessionMgr = new SessionApiManager(mClient);
+//                                                   SessionApiManager sessionMgr = new SessionApiManager(mClient);
 
 //                                                   //^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //                                                   Calendar calStart = new GregorianCalendar(2015, 01, 06, 17, 01, 30);
