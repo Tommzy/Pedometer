@@ -35,7 +35,7 @@ public class RecordApiManager {
     public RecordApiManager (GoogleApiClient client) {
         this.mClient = client;
 
-        mHistoryMgr = new HistoryApiManager(mClient);
+        mHistoryMgr = HistoryApiManager.getInstance(mClient);
     }
 
     public void subscribeStep() {
@@ -57,20 +57,6 @@ public class RecordApiManager {
 //                                                   mHistoryMgr.queryCurrentWeekFitnessData();
 //                                                   mHistoryMgr.queryAggregateFitnessData(step, aggregateStep);
                                                    //TODO: LET HistoryManager update the step view
-                                                   //TODO:
-//                                                   SessionApiManager sessionMgr = new SessionApiManager(mClient);
-
-//                                                   //^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//                                                   Calendar calStart = new GregorianCalendar(2015, 01, 06, 17, 01, 30);
-//                                                   Calendar calEnd = new GregorianCalendar(2015, 01, 06, 17, 03, 28);
-//
-//                                                   long sessionStart = calStart.getTimeInMillis();
-//                                                   long sessionEnd = calEnd.getTimeInMillis();
-//
-//                                                   SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd HH:mm:ss");
-//                                                   Log.i("***********************", dateFormat.format(sessionStart) + " " +  dateFormat.format(sessionEnd));
-//
-//                                                   sessionMgr.readSessionData(sessionStart, sessionEnd);
                                                } else {
                                                    Log.i(TAG, "Step / " + "There was a problem subscribing. -> " + status.getStatusMessage());
                                                }

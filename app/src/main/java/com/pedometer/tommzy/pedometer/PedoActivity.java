@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -15,6 +16,7 @@ import android.os.Bundle;
 
 
 import android.os.Trace;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -44,6 +46,7 @@ import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.data.Value;
 import com.google.android.gms.fitness.request.SensorRequest;
 import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.DetectedActivity;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -162,6 +165,13 @@ public class PedoActivity extends BaseActivity {
         Intent i = new Intent(this, ActivityRecognitionIntentService.class);
         final PendingIntent mActivityRecognitionPendingIntent = PendingIntent.getService(this, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        //start sleep tracking service
+//        startService(new Intent(this, SleepService.class));
+
+//        PreferenceManager.setDefaultValues(this, R.xml.preferences, true);
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        aim = Integer.parseInt(sharedPref.getString(SettingsActivity.STEP_GOAL, "5000"));
+
         initspead=true;//init spead = 0
 
 
@@ -169,8 +179,7 @@ public class PedoActivity extends BaseActivity {
             authInProgress = savedInstanceState.getBoolean(AUTH_PENDING);
         }
 
-        //TODO: change aim to dynamic
-        aim = 300;
+
 
 
         // Create the Google API Client
@@ -264,10 +273,17 @@ public class PedoActivity extends BaseActivity {
                 SensorManager.SENSOR_DELAY_NORMAL);
         lastEvent=System.currentTimeMillis();//initiate the current time for acceleration
 
+        if (!mClient.isConnecting() && !mClient.isConnected()) {
+            historyApiManager=HistoryApiManager.getInstance(mClient);
+            recordApiManager=new RecordApiManager(mClient);
+            sessionApiManager=new SessionApiManager(mClient);
+        }else{
+            mClient.connect();
+            historyApiManager=HistoryApiManager.getInstance(mClient);
+            recordApiManager=new RecordApiManager(mClient);
+            sessionApiManager=new SessionApiManager(mClient);
+        }
 
-        historyApiManager=new HistoryApiManager(mClient);
-        recordApiManager=new RecordApiManager(mClient);
-        sessionApiManager=new SessionApiManager(mClient);
 
 
 
@@ -309,9 +325,6 @@ public class PedoActivity extends BaseActivity {
         registerReceiver(receiver, filter);
 
         mClient.connect();
-
-
-
 
     }
 
@@ -398,7 +411,7 @@ public class PedoActivity extends BaseActivity {
 
     public void retrieveFitnessData(){
         historyApiManager.queryCurrentDayFitnessData();
-//        historyApiManager.queryCurrentWeekFitnessData();
+        historyApiManager.queryCurrentWeekFitnessData();
     }
 
 
@@ -489,7 +502,8 @@ public class PedoActivity extends BaseActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            unregisterFitnessDataListener();
+            Intent call = new Intent(this, SettingsActivity.class);
+            this.startActivity(call);
             return true;
         }
 
@@ -506,11 +520,20 @@ public class PedoActivity extends BaseActivity {
         if (!mClient.isConnecting() && !mClient.isConnected()) {
             mClient.connect();
         }
+
+        //TODO uncomment here
+        dailyStepCount=HistoryApiManager.getInstance(mClient).getDailySteps();
+        updateViewStepCounter(0);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+
+    }
+
+    protected void OnDestroy(){
+        super.onDestroy();
         if (mClient.isConnected()||mClient.isConnecting()) {
             mClient.disconnect();
         }
@@ -577,6 +600,32 @@ public class PedoActivity extends BaseActivity {
         }
     }
 
+
+    public int calculateCalorie(long duration, int activity){
+
+        switch(activity) {
+            case DetectedActivity.IN_VEHICLE:
+                return 0;
+            case DetectedActivity.ON_BICYCLE:
+                return (int)(7.35*(duration/(1000*60)));
+            case DetectedActivity.ON_FOOT:
+                return (int)(5*(duration/(1000*60)));
+            case DetectedActivity.STILL:
+                return 0;
+            case DetectedActivity.UNKNOWN:
+                return 0;
+            case DetectedActivity.TILTING:
+                return 0;
+            case DetectedActivity.RUNNING:
+                return (int)(12*(duration/(1000*60)));
+            case DetectedActivity.WALKING:
+                return (int)(5*(duration/(1000*60)));
+        }
+
+        return 0;
+
+    }
+
     private void stopCurrentSession(){
         sessionApiManager.stopSession(identifier, currentActivity);
     }
@@ -599,5 +648,7 @@ public class PedoActivity extends BaseActivity {
     public void onDestroy(){
         stopService(new Intent(PedoActivity.this,ActivityRecognitionIntentService.class));
     }
+
+
 
 }

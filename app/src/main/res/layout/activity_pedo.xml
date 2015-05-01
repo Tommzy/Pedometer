@@ -6,33 +6,40 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:custom="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center_vertical">
+        android:orientation="vertical"
+        android:gravity="center_vertical">
 
-    <com.github.lzyzsd.circleprogress.DonutProgress
-                android:id="@+id/donut_progress"
-                android:layout_width="243dp"
-                android:layout_height="243dp"
-                custom:donut_finished_color="#FF6600"
-                custom:donut_max="100"
-                custom:donut_progress="0"
-                android:layout_gravity="center" />
+        <com.github.lzyzsd.circleprogress.DonutProgress
+                    android:id="@+id/donut_progress"
+                    android:layout_width="243dp"
+                    android:layout_height="243dp"
+                    custom:donut_finished_color="#FF6600"
+                    custom:donut_max="100"
+                    custom:donut_progress="0"
+                    android:layout_gravity="center" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/daily_step_count"
-        android:textSize="70sp"
-        android:text="0"
-        android:textColor="#66FF33"
-        android:gravity="center_horizontal"
-        android:layout_gravity="center" />
-</LinearLayout>
+        <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/daily_step_count"
+                    android:textSize="70sp"
+                    android:text="0"
+                    android:textColor="#FF9933"
+                    android:gravity="center_horizontal"
+                    android:layout_gravity="center" />
+
+    </LinearLayout>
+
+    <!-- The main view of the  -->
+    <FrameLayout
+        android:id="@+id/content_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
     <!-- android:layout_gravity="start" tells DrawerLayout to treat
      this as a sliding drawer on the left side for left-to-right
@@ -40,15 +47,15 @@
      The drawer is given a fixed width in dp and extends the full height of
      the container. A solid background is used for contrast
      with the content view. -->
-<ListView xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:tools="http://schemas.android.com/tools"
-android:id="@+id/left_drawer"
-android:layout_width="240dp"
-android:layout_height="match_parent"
-android:layout_gravity="start"
-android:choiceMode="singleChoice"
-android:divider="@android:color/transparent"
-android:dividerHeight="0dp"
-android:background="#00FFFF"/>
+    <ListView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/left_drawer"
+        android:layout_width="240dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:choiceMode="singleChoice"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="0dp"
+        android:background="#00FFFF"/>
 
-    </android.support.v4.widget.DrawerLayout>
+</android.support.v4.widget.DrawerLayout>

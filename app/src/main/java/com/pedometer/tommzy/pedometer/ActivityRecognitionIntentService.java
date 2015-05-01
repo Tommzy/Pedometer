@@ -63,7 +63,7 @@ public class ActivityRecognitionIntentService extends IntentService {
         return myActivity;
     }
 
-    private String getNameFromType(int activityType) {
+    static public String getNameFromType(int activityType) {
         switch(activityType) {
             case DetectedActivity.IN_VEHICLE:
                 return "in_vehicle";
