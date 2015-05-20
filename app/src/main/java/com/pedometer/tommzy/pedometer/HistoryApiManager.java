@@ -18,7 +18,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -44,9 +43,10 @@ public class HistoryApiManager {
     private List<Integer> weekySteps = new ArrayList<Integer>();
     private List<Long> weeklyWalkTime = new ArrayList<Long>();
     private List<Long> weeklyRunningTime = new ArrayList<Long>();
-    private List<Long> weekyCyclingTime = new ArrayList<Long>();
+    private List<Long> weeklyCyclingTime = new ArrayList<Long>();
     private List<Long> weeklyDrivingTime = new ArrayList<Long>();
     private List<String> dailyActivitiesTime = new ArrayList<String>();
+    private List<ArrayList<String>> weeklyActivitiesTime= new ArrayList<ArrayList<String>>();
 
 
     private HistoryApiManager (GoogleApiClient client) {
@@ -170,7 +170,7 @@ public class HistoryApiManager {
         Log.i(TAG,weekySteps.toString());
         Log.i(TAG,weeklyWalkTime.toString());
         Log.i(TAG,weeklyRunningTime.toString());
-        Log.i(TAG,weekyCyclingTime.toString());
+        Log.i(TAG, weeklyCyclingTime.toString());
         Log.i(TAG,weeklyDrivingTime.toString());
     }
 
@@ -217,7 +217,7 @@ public class HistoryApiManager {
                         Log.i(TAG, "\tField: " + field.getName() +
                                 " Value: " + dp.getValue(field));
                         if(field.getName().equalsIgnoreCase("duration")){
-                            weekyCyclingTime.add(Long.valueOf(String.valueOf(dp.getValue(field))));
+                            weeklyCyclingTime.add(Long.valueOf(String.valueOf(dp.getValue(field))));
                         }
                     }
 
@@ -437,9 +437,9 @@ public class HistoryApiManager {
         return this.weeklyRunningTime;
     }
 
-    public List<Long> getWeekyCyclingTime(){
+    public List<Long> getWeeklyCyclingTime(){
         queryCurrentWeekFitnessData();
-        return this.weekyCyclingTime;
+        return this.weeklyCyclingTime;
     }
 
 
@@ -456,7 +456,41 @@ public class HistoryApiManager {
         dailyActivitiesTime.add(String.valueOf(runningTime));
         dailyActivitiesTime.add(String.valueOf(cyclingTime));
 
+        Log.d(TAG, dailyActivitiesTime.toString());
+
         return dailyActivitiesTime;
+    }
+
+    public List<ArrayList<String>> getWeeklyActivitiesTime(){
+        queryCurrentDayFitnessData();
+
+        ArrayList<String> weeklyWalkTimeString = new ArrayList<String>();
+        for(Long time: weeklyWalkTime){
+            weeklyWalkTimeString.add(time.toString());
+        }
+        weeklyActivitiesTime.add(weeklyWalkTimeString);
+
+        ArrayList<String> weeklyRunningTimeString = new ArrayList<String>();
+        for(Long time: weeklyRunningTime){
+            weeklyRunningTimeString.add(time.toString());
+        }
+        weeklyActivitiesTime.add(weeklyRunningTimeString);
+
+        ArrayList<String> weeklyCyclingTimeString = new ArrayList<String>();
+        for(Long time: weeklyCyclingTime){
+            weeklyCyclingTimeString.add(time.toString());
+        }
+        weeklyActivitiesTime.add(weeklyCyclingTimeString);
+
+        ArrayList<String> weeklyDrivingTimeString = new ArrayList<String>();
+        for(Long time: weeklyDrivingTime){
+            weeklyDrivingTimeString.add(time.toString());
+        }
+        weeklyActivitiesTime.add(weeklyDrivingTimeString);
+
+        Log.d(TAG, weeklyActivitiesTime.toString());
+
+        return weeklyActivitiesTime;
     }
 
 

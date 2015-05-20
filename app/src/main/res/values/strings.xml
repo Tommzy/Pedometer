@@ -9,8 +9,8 @@
     //navigation drawer list
     <string-array name="functions_array">
         <item>Pedometer</item>
-        <item>Activities</item>
-        <item>Settings</item>
+        <item>Daily Activities</item>
+        <item>Weekly Activities</item>
     </string-array>
 
     <string name="drawer_open">Open navigation drawer</string>

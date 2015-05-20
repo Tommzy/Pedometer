@@ -1,5 +1,7 @@
 package com.pedometer.tommzy.pedometer;
 
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,14 +11,14 @@ import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 
 
-import android.os.Trace;
 import android.preference.PreferenceManager;
+import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,9 +38,14 @@ import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.request.DataSourcesRequest;
 import com.google.android.gms.fitness.request.OnDataPointListener;
 import com.google.android.gms.fitness.result.DataSourcesResult;
+
 //circleprogeess
 import com.github.lzyzsd.circleprogress.DonutProgress;
 
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.gms.common.api.Status;
@@ -51,15 +58,13 @@ import com.google.android.gms.location.DetectedActivity;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import static android.util.FloatMath.sqrt;
 
 
 
-
-public class PedoActivity extends BaseActivity {
+public class PedoActivity extends ActionBarActivity {
     // public final static String EXTRA_MESSAGE = "com.pedometer.tommzy.pedometer.MESSAGE";
     private GoogleApiClient mClient = null;
-    public static final String TAG = "StepSensorsApi";
+    public static final String TAG = "PedoActivity";
     private static final int REQUEST_OAUTH = 1;
     private TextView stepTextView=null;
     private DonutProgress donutView=null;
@@ -79,6 +84,11 @@ public class PedoActivity extends BaseActivity {
     private String currentActivity=null;
     private long latestSessionTime=0;
     private String identifier=null;
+
+    private String[] mFunctionTitles;
+    private DrawerLayout mDrawerLayout;
+    private ListView mDrawerList;
+    private ActionBarDrawerToggle mDrawerToggle;
 
 
 
@@ -103,61 +113,130 @@ public class PedoActivity extends BaseActivity {
     private HistoryApiManager historyApiManager;
     private RecordApiManager recordApiManager;
 
-    //Accerlate sensor
-    /*
-     * SensorEventListener接口的实现，需要实现两个方法
-     * 方法1 onSensorChanged 当数据变化的时候被触发调用
-     * 方法2 onAccuracyChanged 当获得数据的精度发生变化的时候被调用，比如突然无法获得数据时
-     * */
-    final SensorEventListener myAccelerometerListener = new SensorEventListener(){
 
-        //复写onSensorChanged方法
-        public void onSensorChanged(SensorEvent sensorEvent){
-            if(sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
-//                Log.i(TAG,"onSensorChanged");
-
-                //图解中已经解释三个值的含义
-                float X_lateral = sensorEvent.values[0];
-                float Y_longitudinal = sensorEvent.values[1];
-                float Z_vertical = sensorEvent.values[2];
-//                Log.i(TAG,"\n heading "+X_lateral);
-//                Log.i(TAG,"\n pitch "+Y_longitudinal);
-//                Log.i(TAG,"\n roll "+Z_vertical);
-
-                long now;
-                long interval;
-                now = System.currentTimeMillis();
-                interval = now-lastEvent;
-                lastEvent=now;
-
-                float speed = 0;
-                float linearAccelerate;
-                linearAccelerate = sqrt(X_lateral * X_lateral + Y_longitudinal * Y_longitudinal);
-
-                if(initspead){
-                    speed = linearAccelerate*interval/1000;
-//                    Log.i(TAG,"\n Time Interval "+interval);
-//                    Log.i(TAG,"\n Current speed "+speed);
-                    if(speed > 5.6 ){
-                        Log.i(TAG,"Depends on accelerating sensor: You Are Running!");
-                    }
-                }else{
-                    speed = speed + linearAccelerate*interval;
-                    Log.i(TAG,"\n Current speed "+speed);
-                }
-            }
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView parent, View view, int position, long id) {
+            selectItem(position);
         }
-        //复写onAccuracyChanged方法
-        public void onAccuracyChanged(Sensor sensor , int accuracy){
-            Log.i(TAG, "onAccuracyChanged");
+    }
+
+    /** Swaps fragments in the main content view */
+    private void selectItem(int position) {
+//        Create a new fragment and specify the planet to show based on position
+        Fragment fragment = null;
+
+        Log.i(TAG,"selectItem!"+position);
+
+        if(position ==0){
+            mDrawerList.setItemChecked(position, true);
+//        setTitle(mFunctionTitles[position]);
+            mDrawerLayout.closeDrawer(mDrawerList);
+            return;
+        }else if (position == 1){
+            fragment = new DailyFragment();
+
+        }else if(position ==2){
+            fragment = new WeeklyFragment();
+        }else{
+            mDrawerList.setItemChecked(position, true);
+//        setTitle(mFunctionTitles[position]);
+            mDrawerLayout.closeDrawer(mDrawerList);
+            return;
         }
-    };
+
+        // Insert the fragment by replacing any existing fragment
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.content_frame, fragment)
+                .commit();
+//
+//        // Highlight the selected item, update the title, and close the drawer
+        mDrawerList.setItemChecked(position, true);
+//        setTitle(mFunctionTitles[position]);
+        mDrawerLayout.closeDrawer(mDrawerList);
+    }
+
+
+
+    /* Called whenever we call invalidateOptionsMenu() */
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        // If the nav drawer is open, hide action items related to the content view
+        boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
+//        menu.findItem(R.id.action_settings).setVisible(!drawerOpen);
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    /**
+     * 菜单项的设置
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_ped, menu);
+        return true;
+    }
+
+
+
+    /**
+     * When using the ActionBarDrawerToggle, you must call it during
+     * onPostCreate() and onConfigurationChanged()...
+     */
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // Sync the toggle state after onRestoreInstanceState has occurred.
+        mDrawerToggle.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Pass any configuration change to the drawer toggls
+        mDrawerToggle.onConfigurationChanged(newConfig);
+    }
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pedo);
+
+
+        mFunctionTitles = getResources().getStringArray(R.array.functions_array);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerList = (ListView) findViewById(R.id.left_drawer);
+
+        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
+                R.layout.drawer_list_item, mFunctionTitles));
+
+        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
+
+
+        mDrawerToggle = new ActionBarDrawerToggle( this, mDrawerLayout,
+                R.drawable.ic_drawer,
+                R.string.drawer_open,
+                R.string.drawer_close) {
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+//                getActionBar().setTitle(R.string.app_name);
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
+
+
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+//                getActionBar().setTitle(R.string.drawer_menu);
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu();
+            }
+        };
+
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+
         //select the part of the view that need update
         stepTextView = (TextView) findViewById(R.id.daily_step_count);
         //instantiate the donutView
@@ -217,6 +296,8 @@ public class PedoActivity extends BaseActivity {
 //                                    Log.i(TAG, "just resumed...");
 //                                }
                                 // [START auth_build_googleapiclient_ending]
+                                dailyStepCount=HistoryApiManager.getInstance(mClient).getDailySteps();
+                                updateViewStepCounter(0);
                             }
 
                             @Override
@@ -268,9 +349,6 @@ public class PedoActivity extends BaseActivity {
         int sensorType = Sensor.TYPE_ACCELEROMETER;
 
         //register a listener at here
-        sm.registerListener(myAccelerometerListener,
-                sm.getDefaultSensor(sensorType),
-                SensorManager.SENSOR_DELAY_NORMAL);
         lastEvent=System.currentTimeMillis();//initiate the current time for acceleration
 
         if (!mClient.isConnecting() && !mClient.isConnected()) {
@@ -325,6 +403,7 @@ public class PedoActivity extends BaseActivity {
         registerReceiver(receiver, filter);
 
         mClient.connect();
+
 
     }
 
@@ -487,13 +566,6 @@ public class PedoActivity extends BaseActivity {
 
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_ped, menu);
-        return true;
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
@@ -537,6 +609,7 @@ public class PedoActivity extends BaseActivity {
         if (mClient.isConnected()||mClient.isConnecting()) {
             mClient.disconnect();
         }
+        stopService(new Intent(PedoActivity.this,ActivityRecognitionIntentService.class));
     }
 
     @Override
@@ -630,25 +703,10 @@ public class PedoActivity extends BaseActivity {
         sessionApiManager.stopSession(identifier, currentActivity);
     }
 
-
-
     @Override
     public void setTitle(CharSequence title) {
         mTitle = title;
         getActionBar().setTitle(mTitle);
     }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-//        setContentView(R.layout.activity_pedo);
-    }
-
-    @Override
-    public void onDestroy(){
-        stopService(new Intent(PedoActivity.this,ActivityRecognitionIntentService.class));
-    }
-
-
 
 }
