@@ -82,7 +82,13 @@ public class DailyFragment extends Fragment implements OnChartGestureListener {
         mChart.getAxisRight().setEnabled(false);
 
         XAxis xAxis = mChart.getXAxis();
-        xAxis.setEnabled(false);
+        xAxis.setEnabled(true);
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+
+        mChart.animateXY(1000, 1000);//animate X and Y value
+        mChart.setDragEnabled(true);
+        mChart.setScaleEnabled(true);
+
 
         // programatically add the chart
         FrameLayout parent = (FrameLayout) dailyLayout.findViewById(R.id.daily_bar_chart);
@@ -137,6 +143,7 @@ public class DailyFragment extends Fragment implements OnChartGestureListener {
 
         sets = new BarDataSet(entries, "Daily Activities In Minutes");
         Log.i(TAG,entries.toString());
+        sets.setColors(ColorTemplate.VORDIPLOM_COLORS);
 
 
         ArrayList<String> labels = new ArrayList<String>();

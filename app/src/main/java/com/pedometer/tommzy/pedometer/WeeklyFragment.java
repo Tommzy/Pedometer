@@ -18,6 +18,7 @@ import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
+import com.github.mikephil.charting.utils.ColorTemplate;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -63,11 +64,12 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
             Log.i(TAG,"Encounter a problem during generating data!");
             e.printStackTrace();
         }
+        mChart.invalidate();
 
         Legend l =mChart.getLegend();
         l.setTypeface(tf);
 
-        mChart.fitScreen();
+//        mChart.fitScreen();
 
         YAxis leftAxis = mChart.getAxisLeft();
         leftAxis.setTypeface(tf);
@@ -75,10 +77,22 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
         mChart.getAxisRight().setEnabled(false);
 
         XAxis xAxis = mChart.getXAxis();
-        xAxis.setEnabled(false);
+        xAxis.setEnabled(true);
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+
+        mChart.animateXY(1000, 1000);//animate X and Y value
+        mChart.setDragEnabled(true);
+        mChart.setScaleEnabled(true);
+
+//        mChart.setDescription("");    // Hide the description
+//        mChart.getAxisLeft().setDrawLabels(false);
+//        mChart.getAxisRight().setDrawLabels(false);
+//        mChart.getXAxis().setDrawLabels(false);
+
+        mChart.getLegend().setEnabled(false);
 
         // programatically add the chart
-        FrameLayout parent = (FrameLayout) weeklyLayout.findViewById(R.id.daily_bar_chart);
+        FrameLayout parent = (FrameLayout) weeklyLayout.findViewById(R.id.weekly_bar_chart);
 //        ((ViewGroup)mChart.getParent()).removeView(mChart);
         parent.addView(mChart);
 
@@ -113,15 +127,35 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
 
     protected BarData generateBarData(List<ArrayList<String>> rawDataSets) {
 
-        BarDataSet walkingSet ;
-        BarDataSet runningSet;
-        BarDataSet cyclingSet;
-        BarDataSet DrivingSet;
+//        BarDataSet walkingSet ;
+//        BarDataSet runningSet;
+//        BarDataSet cyclingSet;
+//        BarDataSet DrivingSet;
+        BarDataSet firstB ;
+        BarDataSet secondB ;
+        BarDataSet thirdB ;
+        BarDataSet fourthB ;
+        BarDataSet fifthB ;
+        BarDataSet sixthB ;
+        BarDataSet seventhB ;
+
+
 
         ArrayList<BarEntry> weeklyWalkTime = new ArrayList<>();
         ArrayList<BarEntry> weeklyRunningTime = new ArrayList<>();
         ArrayList<BarEntry> weeklyCyclingTime = new ArrayList<>();
         ArrayList<BarEntry> weeklyDrivingTime = new ArrayList<>();
+
+        //rewrite here instead of hard code
+        ArrayList<BarEntry> first = new ArrayList<>();
+        ArrayList<BarEntry> second = new ArrayList<>();
+        ArrayList<BarEntry> third = new ArrayList<>();
+        ArrayList<BarEntry> fourth = new ArrayList<>();
+        ArrayList<BarEntry> fifth = new ArrayList<>();
+        ArrayList<BarEntry> sixth = new ArrayList<>();
+        ArrayList<BarEntry> seventh = new ArrayList<>();
+
+
 
         boolean walkFlag=false;
         boolean runningFlag=false;
@@ -136,24 +170,28 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
             ArrayList<String> data = (ArrayList<String>) itr.next();//take out the activity item in a String formart
 
             if(!walkFlag){
+                i=0;
                 for (String dataEntry: data){
                     weeklyWalkTime.add(new BarEntry(Integer.valueOf(dataEntry)/60000,i));
                     i++;
                 }
                 walkFlag = true;
             }else if(!runningFlag){
+                i=0;
                 for(String dataEntry: data){
                     weeklyRunningTime.add(new BarEntry(Integer.valueOf(dataEntry)/60000,i));
                     i++;
                 }
                 runningFlag=true;
             }else if(!cyclingFlag){
+                i=0;
                 for(String dataEntry: data){
                     weeklyCyclingTime.add(new BarEntry(Integer.valueOf(dataEntry)/60000,i));
                     i++;
                 }
                 cyclingFlag=true;
             }else if(!drivingFlag){
+                i=0;
                 for(String dataEntry: data){
                     weeklyDrivingTime.add(new BarEntry(Integer.valueOf(dataEntry)/60000,i));
                     i++;
@@ -164,16 +202,150 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
             }
         }
 
-        walkingSet = new BarDataSet(weeklyWalkTime, "walking time In Minutes");
-        runningSet = new BarDataSet(weeklyRunningTime, "running time In Minutes");
-        cyclingSet = new BarDataSet(weeklyCyclingTime, "cycling time In Minutes");
-        DrivingSet = new BarDataSet(weeklyDrivingTime, "driving time In Minutes");
+        for(int cnt =0; cnt <7; cnt++){
+            if(cnt==0) {
+                BarEntry entry1 = weeklyWalkTime.get(cnt);
+                entry1.setXIndex(0);
+                first.add(entry1);
+
+                BarEntry entry2 = weeklyRunningTime.get(cnt);
+                entry2.setXIndex(1);
+                first.add(entry2);
+
+                BarEntry entry3 = weeklyDrivingTime.get(cnt);
+                entry3.setXIndex(2);
+                first.add(entry3);
+
+                BarEntry entry4 = weeklyCyclingTime.get(cnt);
+                entry4.setXIndex(3);
+                first.add(entry4);
+            }else if (cnt ==1){
+                BarEntry entry1 = weeklyWalkTime.get(cnt);
+                entry1.setXIndex(0);
+                second.add(entry1);
+
+                BarEntry entry2 = weeklyRunningTime.get(cnt);
+                entry2.setXIndex(1);
+                second.add(entry2);
+
+                BarEntry entry3 = weeklyDrivingTime.get(cnt);
+                entry3.setXIndex(2);
+                second.add(entry3);
+
+                BarEntry entry4 = weeklyCyclingTime.get(cnt);
+                entry4.setXIndex(3);
+                second.add(entry4);
+            }else if (cnt ==2){
+                BarEntry entry1 = weeklyWalkTime.get(cnt);
+                entry1.setXIndex(0);
+                third.add(entry1);
+
+                BarEntry entry2 = weeklyRunningTime.get(cnt);
+                entry2.setXIndex(1);
+                third.add(entry2);
+
+                BarEntry entry3 = weeklyDrivingTime.get(cnt);
+                entry3.setXIndex(2);
+                third.add(entry3);
+
+                BarEntry entry4 = weeklyCyclingTime.get(cnt);
+                entry4.setXIndex(3);
+                third.add(entry4);
+            }else if (cnt ==3){
+                BarEntry entry1 = weeklyWalkTime.get(cnt);
+                entry1.setXIndex(0);
+                fourth.add(entry1);
+
+                BarEntry entry2 = weeklyRunningTime.get(cnt);
+                entry2.setXIndex(1);
+                fourth.add(entry2);
+
+                BarEntry entry3 = weeklyDrivingTime.get(cnt);
+                entry3.setXIndex(2);
+                fourth.add(entry3);
+
+                BarEntry entry4 = weeklyCyclingTime.get(cnt);
+                entry4.setXIndex(3);
+                fourth.add(entry4);
+            }else if (cnt ==4){
+                BarEntry entry1 = weeklyWalkTime.get(cnt);
+                entry1.setXIndex(0);
+                fifth.add(entry1);
+
+                BarEntry entry2 = weeklyRunningTime.get(cnt);
+                entry2.setXIndex(1);
+                fifth.add(entry2);
+
+                BarEntry entry3 = weeklyDrivingTime.get(cnt);
+                entry3.setXIndex(2);
+                fifth.add(entry3);
+
+                BarEntry entry4 = weeklyCyclingTime.get(cnt);
+                entry4.setXIndex(3);
+                fifth.add(entry4);
+            }else if (cnt ==5){
+                BarEntry entry1 = weeklyWalkTime.get(cnt);
+                entry1.setXIndex(0);
+                sixth.add(entry1);
+
+                BarEntry entry2 = weeklyRunningTime.get(cnt);
+                entry2.setXIndex(1);
+                sixth.add(entry2);
+
+                BarEntry entry3 = weeklyDrivingTime.get(cnt);
+                entry3.setXIndex(2);
+                sixth.add(entry3);
+
+                BarEntry entry4 = weeklyCyclingTime.get(cnt);
+                entry4.setXIndex(3);
+                sixth.add(entry4);
+            }else if (cnt ==6){
+                BarEntry entry1 = weeklyWalkTime.get(cnt);
+                entry1.setXIndex(0);
+                seventh.add(entry1);
+
+                BarEntry entry2 = weeklyRunningTime.get(cnt);
+                entry2.setXIndex(1);
+                seventh.add(entry2);
+
+                BarEntry entry3 = weeklyDrivingTime.get(cnt);
+                entry3.setXIndex(2);
+                seventh.add(entry3);
+
+                BarEntry entry4 = weeklyCyclingTime.get(cnt);
+                entry4.setXIndex(3);
+                seventh.add(entry4);
+            }
+        }
+
+        firstB = new BarDataSet(first, "Yesterday ");
+        firstB.setColors(ColorTemplate.VORDIPLOM_COLORS);
+        secondB = new BarDataSet(second, "Yesterday ");
+        secondB.setColors(ColorTemplate.VORDIPLOM_COLORS);
+        thirdB = new BarDataSet(third, "Yesterday ");
+        thirdB.setColors(ColorTemplate.VORDIPLOM_COLORS);
+        fourthB = new BarDataSet(fourth, "Yesterday ");
+        fourthB.setColors(ColorTemplate.VORDIPLOM_COLORS);
+        fifthB = new BarDataSet(fifth, "Yesterday ");
+        fifthB.setColors(ColorTemplate.VORDIPLOM_COLORS);
+        sixthB = new BarDataSet(sixth, "Yesterday ");
+        sixthB.setColors(ColorTemplate.VORDIPLOM_COLORS);
+        seventhB = new BarDataSet(seventh, "Yesterday ");
+        seventhB.setColors(ColorTemplate.VORDIPLOM_COLORS);
 
 
-        Log.i(TAG,walkingSet.toString());
-        Log.i(TAG,runningSet.toString());
-        Log.i(TAG,cyclingSet.toString());
-        Log.i(TAG,DrivingSet.toString());
+//        Log.i(TAG,walkingSet.toString());
+//        Log.i(TAG,runningSet.toString());
+//        Log.i(TAG,cyclingSet.toString());
+//        Log.i(TAG,DrivingSet.toString());
+
+        Log.i(TAG,firstB.toString());
+        Log.i(TAG,secondB.toString());
+        Log.i(TAG,thirdB.toString());
+        Log.i(TAG,fourthB.toString());
+        Log.i(TAG,fifthB.toString());
+        Log.i(TAG,sixthB.toString());
+        Log.i(TAG,seventhB.toString());
 
 
         ArrayList<String> labels = new ArrayList<String>();
@@ -183,13 +355,23 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
         labels.add("Driving");
         labels.add("Cycling");
 
+
         Log.i(TAG,labels.toString());
 
-        BarData data = new BarData();
-        data.addDataSet(walkingSet);
-        data.addDataSet(runningSet);
-        data.addDataSet(cyclingSet);
-        data.addDataSet(DrivingSet);
+
+        ArrayList<BarDataSet> dataSets = new ArrayList<BarDataSet>();
+        dataSets.clear();
+        dataSets.add(firstB);
+        dataSets.add(secondB);
+        dataSets.add(thirdB);
+        dataSets.add(fourthB);
+        dataSets.add(fifthB);
+        dataSets.add(sixthB);
+        dataSets.add(seventhB);
+
+        BarData data = new BarData(labels,dataSets);
+        data.setGroupSpace(0);
+
 
 
         Log.i(TAG,"Successfully create new data");

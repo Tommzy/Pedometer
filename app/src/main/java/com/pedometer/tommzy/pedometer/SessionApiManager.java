@@ -31,6 +31,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class SessionApiManager {
 
+    private static SessionApiManager sessionApiManager;
+
     private String TAG = "SessionApiManager";
 
     private GoogleApiClient mClient;
@@ -44,8 +46,22 @@ public class SessionApiManager {
 
     private long startTime, endTime;
 
-    public SessionApiManager (GoogleApiClient client) {
+    private SessionApiManager (GoogleApiClient client) {
         this.mClient = client;
+    }
+
+    public static synchronized SessionApiManager getInstance(GoogleApiClient client){
+        if(sessionApiManager==null){
+            sessionApiManager=new SessionApiManager(client);
+        }
+        return sessionApiManager;
+    }
+
+    public static synchronized SessionApiManager getInstance() throws Exception {
+        if(sessionApiManager==null){
+            throw new Exception("HistoryApiManager: getInstance() didn't instantiated yet");
+        }
+        return sessionApiManager;
     }
 
     public String startSession(final long startTime, final String activity) {
@@ -84,6 +100,39 @@ public class SessionApiManager {
 
         return identifier;
     }
+
+    public String insertSession(final long startTime, final long endTime, final String activity) {
+        cnt++;
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(startTime);
+        Date date = calendar.getTime();
+        String identifier;
+        identifier = String.valueOf(startTime)+activity;
+
+        Log.i("In startSession activity", activity);
+        Log.i("In StartSession startTime",String.valueOf(startTime));
+
+        newSession = new Session.Builder()
+                .setName(activity+"session")
+                .setIdentifier(identifier)
+                .setDescription(activity.toString() + dateFormat.format(date) + " " + String.valueOf(cnt))
+                .setStartTime(startTime, TimeUnit.MILLISECONDS)
+                .setEndTime(endTime,TimeUnit.MILLISECONDS)
+                .setActivity(activity)
+                .build();
+
+        // Build a session insert request
+        SessionInsertRequest insertRequest = new SessionInsertRequest.Builder()
+                .setSession(newSession)
+                .build();
+
+
+        Fitness.SessionsApi.insertSession(mClient,insertRequest);
+        return identifier;
+    }
+
+
 
     public void stopSession(String identifier, final String activity) {
         final String sessionName = activity+"session";

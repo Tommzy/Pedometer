@@ -35,7 +35,7 @@ public class RecordApiManager {
     public RecordApiManager (GoogleApiClient client) {
         this.mClient = client;
 
-        mHistoryMgr = HistoryApiManager.getInstance(mClient);
+        mHistoryMgr = HistoryApiManager.getInstance(mClient,new PedoActivity());
     }
 
     public void subscribeStep() {

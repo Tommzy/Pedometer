@@ -1,5 +1,6 @@
 package com.pedometer.tommzy.pedometer;
 
+import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
@@ -45,19 +46,20 @@ public class HistoryApiManager {
     private List<Long> weeklyRunningTime = new ArrayList<Long>();
     private List<Long> weeklyCyclingTime = new ArrayList<Long>();
     private List<Long> weeklyDrivingTime = new ArrayList<Long>();
-    private List<String> dailyActivitiesTime = new ArrayList<String>();
-    private List<ArrayList<String>> weeklyActivitiesTime= new ArrayList<ArrayList<String>>();
+    private IStepView activity;
 
 
-    private HistoryApiManager (GoogleApiClient client) {
+
+    private HistoryApiManager (GoogleApiClient client, IStepView activity) {
+        this.activity = activity;
         this.mClient = client;
         getCurrentDate();
         getCurrentWeek();
     }
 
-    public static synchronized HistoryApiManager getInstance(GoogleApiClient client){
+    public static synchronized HistoryApiManager getInstance(GoogleApiClient client, IStepView activity){
         if(historyApiManager==null){
-            historyApiManager=new HistoryApiManager(client);
+            historyApiManager=new HistoryApiManager(client,activity);
         }
         return historyApiManager;
     }
@@ -84,46 +86,62 @@ public class HistoryApiManager {
             public void onResult(DataReadResult dataReadResult) {
                 Log.i(TAG, "queryCurrentDayFitnessData()");
                 updateData(dataReadResult);
-
-
             }
         });
     }
 
-    public void queryCurrentWeekFitnessData() {
-        getCurrentWeek();//update the time
-        DataReadRequest dataReadRequest = new DataReadRequest.Builder()
-                .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
-                .aggregate(DataType.TYPE_ACTIVITY_SEGMENT, DataType.AGGREGATE_ACTIVITY_SUMMARY)
-                .bucketByTime(1, TimeUnit.DAYS)
-                .setTimeRange(startBucketTime,endBucketTime,TimeUnit.MILLISECONDS)
-                .build();
 
-        Fitness.HistoryApi.readData(mClient, dataReadRequest).setResultCallback(new ResultCallback<DataReadResult>() {
-            @Override
-            public void onResult(DataReadResult dataReadResult) {
-                Log.i(TAG, "queryCurrentWeekFitnessData()");
-                updateWeeklyData(dataReadResult);
-            }
-        });
+    public void queryEachDayFitnessData() {
+        weekySteps.clear();
+        weeklyWalkTime.clear();
+        weeklyRunningTime.clear();
+        weeklyCyclingTime.clear();
+        weeklyDrivingTime.clear();
 
-    }
+        Log.i("QueryEachDayFitnessData", "Start Query Each Day FitnessData");
 
+        long startTime, endTime;
+        Calendar startOfDay = Calendar.getInstance();
+        startOfDay.set(Calendar.HOUR_OF_DAY,0);
+        startOfDay.set(Calendar.MINUTE, 0);
+        startOfDay.set(Calendar.SECOND, 0);
+        startOfDay.set(Calendar.MILLISECOND, 0);
+        startTime=startOfDay.getTimeInMillis();
+        int i;
+        for(i =0; i<7;i++) {
+            startOfDay.add(Calendar.DAY_OF_YEAR,-1);
+            endTime=startOfDay.getTimeInMillis();
 
-    public void queryAggregateFitnessData(DataType inputType, DataType outputType) {
-        DataReadRequest dataReadRequest = new DataReadRequest.Builder()
-                .aggregate(inputType, outputType)
-                .bucketByTime(1, TimeUnit.DAYS)
-                .setTimeRange(startBucketTime, endBucketTime, TimeUnit.MILLISECONDS)
-                .build();
+            Log.i(TAG,"Start Of the day:"+startOfDay.toString());
+            Log.i(TAG,"Start Of the day:"+startTime);
+            Log.i(TAG,"Start Of the day:"+endTime);
 
-        Fitness.HistoryApi.readData(mClient, dataReadRequest).setResultCallback(new ResultCallback<DataReadResult>() {
-            @Override
-            public void onResult(DataReadResult dataReadResult) {
-                Log.i(TAG, "queryAggregateFitnessData()");
-                updateData(dataReadResult);
-            }
-        });
+            DataReadRequest dataReadRequest1 = new DataReadRequest.Builder()
+                    .aggregate(DataType.TYPE_STEP_COUNT_DELTA, DataType.AGGREGATE_STEP_COUNT_DELTA)
+                    .bucketByTime(1, TimeUnit.DAYS)
+                    .setTimeRange(endTime,startTime, TimeUnit.MILLISECONDS)
+                    .build();
+            DataReadRequest dataReadRequest2 = new DataReadRequest.Builder()
+                    .aggregate(DataType.TYPE_ACTIVITY_SEGMENT, DataType.AGGREGATE_ACTIVITY_SUMMARY)
+                    .bucketByTime(1, TimeUnit.DAYS)
+                    .setTimeRange(endTime,startTime, TimeUnit.MILLISECONDS)
+                    .build();
+            Fitness.HistoryApi.readData(mClient, dataReadRequest1).setResultCallback(new ResultCallback<DataReadResult>() {
+                @Override
+                public void onResult(DataReadResult dataReadResult) {
+                    Log.i(TAG, "queryCurrentDayFitnessData() Step Count");
+                    updateEachDayData(dataReadResult);
+                }
+            });
+            Fitness.HistoryApi.readData(mClient, dataReadRequest2).setResultCallback(new ResultCallback<DataReadResult>() {
+                @Override
+                public void onResult(DataReadResult dataReadResult) {
+                    Log.i(TAG, "queryCurrentDayFitnessData() Activities");
+                    updateEachDayData(dataReadResult);
+                }
+            });
+            startTime=endTime;
+        }
     }
 
 
@@ -136,6 +154,7 @@ public class HistoryApiManager {
                 List<DataSet> dataSets = bucket.getDataSets();
                 for (DataSet dataSet : dataSets) {
                     dumpDataSet(dataSet);
+                    Log.i("Data that will be dumpted!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", dataSet.toString());
                 }
             }
         } else if (dataReadResult.getDataSets().size() > 0) {
@@ -143,11 +162,16 @@ public class HistoryApiManager {
                     + dataReadResult.getDataSets().size());
             for (DataSet dataSet : dataReadResult.getDataSets()) {
                 dumpDataSet(dataSet);
+                Log.i("Data that will be dumpted!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", dataSet.toString());
             }
         }
+
+        this.activity.initStepCounter(this.dailySteps);
+        this.activity.updateDailyCalorie();
     }
 
-    private void updateWeeklyData(DataReadResult dataReadResult) {
+
+    private void updateEachDayData(DataReadResult dataReadResult) {
 
         if (dataReadResult.getBuckets().size() > 0) {
             Log.i(TAG, "Number of returned buckets of DataSets is: "
@@ -155,121 +179,25 @@ public class HistoryApiManager {
             for (Bucket bucket : dataReadResult.getBuckets()) {
                 List<DataSet> dataSets = bucket.getDataSets();
                 for (DataSet dataSet : dataSets) {
-                    dumpWeeklyDataSet(dataSet);
+                    dumpEachDayDataSet(dataSet);
+                    Log.i("Data that will be dumpted!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", dataSet.toString());
                 }
             }
         } else if (dataReadResult.getDataSets().size() > 0) {
             Log.i(TAG, "Number of returned DataSets is: "
                     + dataReadResult.getDataSets().size());
             for (DataSet dataSet : dataReadResult.getDataSets()) {
-                dumpWeeklyDataSet(dataSet);
+                dumpEachDayDataSet(dataSet);
+                Log.i("Data that will be dumpted!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", dataSet.toString());
             }
         }
 
 
-        Log.i(TAG,weekySteps.toString());
-        Log.i(TAG,weeklyWalkTime.toString());
-        Log.i(TAG,weeklyRunningTime.toString());
-        Log.i(TAG, weeklyCyclingTime.toString());
-        Log.i(TAG,weeklyDrivingTime.toString());
-    }
-
-    private void dumpWeeklyDataSet(DataSet dataSet) {
-        String TAG = "dumpWeeklyDataSet";
-
-        Log.i(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
-
-        for (DataPoint dp : dataSet.getDataPoints()) {
-//            Log.i(TAG, "\tType: " + dp.getDataType().getName());
-//            Log.i(TAG, dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS))
-//                    + " ~ " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS))
-//                    + " / " + dp.getDataType().getFields().get(0).getName()
-//                    + " : " + ActivityRecognitionIntentService.getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0))))));
-
-            if(dp.getDataType().getFields().get(0).getName().equalsIgnoreCase("steps")){
-
-                for(Field field : dp.getDataType().getFields()) {
-                    Log.i(TAG, "\tField: " + field.getName() +
-                            " Value: " + dp.getValue(field));
-                    weekySteps.add(dp.getValue(field).asInt());
-                }
-
-            }else if(dp.getDataType().getFields().get(0).getName().equalsIgnoreCase("activity")){
-
-                if(ActivityRecognitionIntentService.
-                        getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0)))))
-                        .equalsIgnoreCase("in_vehicle")){
-
-                    for(Field field : dp.getDataType().getFields()) {
-                        Log.i(TAG, "\tField: " + field.getName() +
-                                " Value: " + dp.getValue(field));
-                        if(field.getName().equalsIgnoreCase("duration")) {
-                            weeklyDrivingTime.add(Long.valueOf(String.valueOf(dp.getValue(field))));
-                        }
-                    }
-
-                }else if (ActivityRecognitionIntentService.
-                        getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0)))))
-                        .equalsIgnoreCase("on_bicycle")){
-
-                    for(Field field : dp.getDataType().getFields()) {
-                        Log.i(TAG, "\tField: " + field.getName() +
-                                " Value: " + dp.getValue(field));
-                        if(field.getName().equalsIgnoreCase("duration")){
-                            weeklyCyclingTime.add(Long.valueOf(String.valueOf(dp.getValue(field))));
-                        }
-                    }
-
-                }else if (ActivityRecognitionIntentService.
-                        getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0)))))
-                        .equalsIgnoreCase("on_foot")){
-
-                    for(Field field : dp.getDataType().getFields()) {
-                        Log.i(TAG, "\tField: " + field.getName() +
-                                " Value: " + dp.getValue(field));
-                        if(field.getName().equalsIgnoreCase("duration")){
-                            weeklyWalkTime.add(Long.valueOf(String.valueOf(dp.getValue(field))));
-                        }
-                    }
-
-                }else if (ActivityRecognitionIntentService.
-                        getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0)))))
-                        .equalsIgnoreCase("running")){
-
-                    for(Field field : dp.getDataType().getFields()) {
-                        Log.i(TAG, "\tField: " + field.getName() +
-                                " Value: " + dp.getValue(field));
-                        if(field.getName().equalsIgnoreCase("duration")){
-                            weeklyRunningTime.add(Long.valueOf(String.valueOf(dp.getValue(field))));
-                        }
-                    }
-
-                }else if (ActivityRecognitionIntentService.
-                        getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0)))))
-                        .equalsIgnoreCase("walking")){
-
-                    for(Field field : dp.getDataType().getFields()) {
-                        Log.i(TAG, "\tField: " + field.getName() +
-                                " Value: " + dp.getValue(field));
-                        if(field.getName().equalsIgnoreCase("duration")){
-                            weeklyWalkTime.add(Long.valueOf(String.valueOf(dp.getValue(field))));
-                        }
-                    }
-
-                }else{
-                    for(Field field : dp.getDataType().getFields()) {
-                        Log.i(TAG, "\tField: " + field.getName() +
-                                " Value: " + dp.getValue(field));
-                    }
-                }
-
-
-            }else{
-                Log.i(TAG,"BUGGGYYYYYYYYYYYYYYYYYYYYYYYYYY");
-            }
-
-        }
+        Log.i(TAG,"weeklysteps"+weekySteps.toString());
+        Log.i(TAG,"weeklywalktime"+weeklyWalkTime.toString());
+        Log.i(TAG,"weeklyrunningtime"+weeklyRunningTime.toString());
+        Log.i(TAG,"weeklycyclingtime"+weeklyCyclingTime.toString());
+        Log.i(TAG,"weeklydrivingtime"+weeklyDrivingTime.toString());
     }
 
 
@@ -281,12 +209,7 @@ public class HistoryApiManager {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
 
         for (DataPoint dp : dataSet.getDataPoints()) {
-//            Log.i(TAG, "\tType: " + dp.getDataType().getName());
-//            Log.i(TAG, dateFormat.format(dp.getStartTime(TimeUnit.MILLISECONDS))
-//                    + " ~ " + dateFormat.format(dp.getEndTime(TimeUnit.MILLISECONDS))
-//                    + " / " + dp.getDataType().getFields().get(0).getName()
-//                    + " : " + ActivityRecognitionIntentService.getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0))))));
-
+            Log.i(TAG, dp.getDataType().getFields().get(0).getName());
             if(dp.getDataType().getFields().get(0).getName().equalsIgnoreCase("steps")){
 
                 for(Field field : dp.getDataType().getFields()) {
@@ -296,6 +219,7 @@ public class HistoryApiManager {
                 }
 
             }else if(dp.getDataType().getFields().get(0).getName().equalsIgnoreCase("activity")){
+                Log.i(TAG,  "The activity is: "+ActivityRecognitionIntentService.getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0))))));
 
                 if(ActivityRecognitionIntentService.
                         getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0)))))
@@ -318,6 +242,7 @@ public class HistoryApiManager {
                                 " Value: " + dp.getValue(field));
                         if(field.getName().equalsIgnoreCase("duration")){
                             cyclingTime=Long.valueOf(String.valueOf(dp.getValue(field)));
+
                         }
                     }
 
@@ -329,6 +254,7 @@ public class HistoryApiManager {
                         Log.i(TAG, "\tField: " + field.getName() +
                                 " Value: " + dp.getValue(field));
                         if(field.getName().equalsIgnoreCase("duration")){
+
                             walkingTime=Long.valueOf(String.valueOf(dp.getValue(field)));
                         }
                     }
@@ -341,6 +267,7 @@ public class HistoryApiManager {
                         Log.i(TAG, "\tField: " + field.getName() +
                                 " Value: " + dp.getValue(field));
                         if(field.getName().equalsIgnoreCase("duration")){
+
                             runningTime=Long.valueOf(String.valueOf(dp.getValue(field)));
                         }
                     }
@@ -353,6 +280,7 @@ public class HistoryApiManager {
                         Log.i(TAG, "\tField: " + field.getName() +
                                 " Value: " + dp.getValue(field));
                         if(field.getName().equalsIgnoreCase("duration")){
+
                             walkingTime=Long.valueOf(String.valueOf(dp.getValue(field)));
                         }
                     }
@@ -369,6 +297,129 @@ public class HistoryApiManager {
                 Log.i(TAG,"BUGGGYYYYYYYYYYYYYYYYYYYYYYYYYY");
             }
 
+        }
+    }
+
+
+    private void dumpEachDayDataSet(DataSet dataSet) {
+        String TAG = "dumpEachDataSet";
+
+        Log.i(TAG, "Data returned for Data type: " + dataSet.getDataType().getName());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
+        boolean steps = false;
+        boolean walk = false;
+        boolean running = false;
+        boolean cycling = false;
+        boolean driving = false;
+
+        for (DataPoint dp : dataSet.getDataPoints()) {
+            Log.i(TAG, dp.getDataType().getFields().get(0).getName());
+            if(dp.getDataType().getFields().get(0).getName().equalsIgnoreCase("steps")){
+                steps = true;
+                for(Field field : dp.getDataType().getFields()) {
+                    Log.i(TAG, "\tField: " + field.getName() +
+                            " Value: " + dp.getValue(field));
+
+                    weekySteps.add(dp.getValue(field).asInt());
+                }
+
+            }else if(dp.getDataType().getFields().get(0).getName().equalsIgnoreCase("activity")){
+                Log.i(TAG,  "The activity is: "+ActivityRecognitionIntentService.getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0))))));
+
+                if(ActivityRecognitionIntentService.
+                        getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0)))))
+                        .equalsIgnoreCase("in_vehicle")){
+
+                    for(Field field : dp.getDataType().getFields()) {
+                        Log.i(TAG, "\tField: " + field.getName() +
+                                " Value: " + dp.getValue(field));
+                        if(field.getName().equalsIgnoreCase("duration")) {
+
+                            weeklyDrivingTime.add((long) dp.getValue(field).asInt());
+                            driving=true;
+                        }
+                    }
+
+                }else if (ActivityRecognitionIntentService.
+                        getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0)))))
+                        .equalsIgnoreCase("on_bicycle")){
+
+                    for(Field field : dp.getDataType().getFields()) {
+                        Log.i(TAG, "\tField: " + field.getName() +
+                                " Value: " + dp.getValue(field));
+                        if(field.getName().equalsIgnoreCase("duration")){
+
+                            weeklyCyclingTime.add((long) dp.getValue(field).asInt());
+                            cycling = true;
+                        }
+                    }
+
+                }else if (ActivityRecognitionIntentService.
+                        getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0)))))
+                        .equalsIgnoreCase("on_foot")){
+
+                    for(Field field : dp.getDataType().getFields()) {
+                        Log.i(TAG, "\tField: " + field.getName() +
+                                " Value: " + dp.getValue(field));
+                        if(field.getName().equalsIgnoreCase("duration")){
+                            weeklyWalkTime.add((long) dp.getValue(field).asInt());
+                            walk = true;
+                        }
+                    }
+
+                }else if (ActivityRecognitionIntentService.
+                        getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0)))))
+                        .equalsIgnoreCase("running")){
+
+                    for(Field field : dp.getDataType().getFields()) {
+                        Log.i(TAG, "\tField: " + field.getName() +
+                                " Value: " + dp.getValue(field));
+                        if(field.getName().equalsIgnoreCase("duration")){
+                            weeklyRunningTime.add((long) dp.getValue(field).asInt());
+                            running=true;
+                        }
+                    }
+
+                }else if (ActivityRecognitionIntentService.
+                        getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0)))))
+                        .equalsIgnoreCase("walking")){
+
+                    for(Field field : dp.getDataType().getFields()) {
+                        Log.i(TAG, "\tField: " + field.getName() +
+                                " Value: " + dp.getValue(field));
+                        if(field.getName().equalsIgnoreCase("duration")){
+                            weeklyWalkTime.add((long) dp.getValue(field).asInt());
+                            walk=true;
+                        }
+                    }
+
+                }else{
+                    for(Field field : dp.getDataType().getFields()) {
+                        Log.i(TAG, "\tField: " + field.getName() +
+                                " Value: " + dp.getValue(field));
+                    }
+                }
+
+
+            }else{
+                Log.i(TAG,"BUGGGYYYYYYYYYYYYYYYYYYYYYYYYYY");
+            }
+
+        }
+
+        if(!steps){
+            if (!walk){
+                weeklyWalkTime.add((long) 0);
+            }
+            if (!running){
+                weeklyRunningTime.add((long) 0);
+            }
+            if(!cycling){
+                weeklyCyclingTime.add((long) 0);
+            }
+            if(!driving){
+                weeklyDrivingTime.add((long) 0);
+            }
         }
     }
 
@@ -422,34 +473,11 @@ public class HistoryApiManager {
         return this.cyclingTime;
     }
 
-    public List<Integer> getWeeklySteps(){
-        queryCurrentWeekFitnessData();
-        return this.weekySteps;
-    }
-
-    public List<Long> getWeeklyWalkingTime(){
-        queryCurrentWeekFitnessData();
-        return this.weeklyWalkTime;
-    }
-
-    public List<Long> getWeeklyRunningTime(){
-        queryCurrentWeekFitnessData();
-        return this.weeklyRunningTime;
-    }
-
-    public List<Long> getWeeklyCyclingTime(){
-        queryCurrentWeekFitnessData();
-        return this.weeklyCyclingTime;
-    }
-
-
-    public List<Long> getWeeklyDrivingTime(){
-        queryCurrentWeekFitnessData();
-        return this.weeklyDrivingTime;
-    }
 
     public List<String> getDailyActivitiesTime(){
-        queryCurrentDayFitnessData();
+//        queryCurrentDayFitnessData();
+
+        List<String> dailyActivitiesTime = new ArrayList<String>();
 
         dailyActivitiesTime.add(String.valueOf(walkingTime));
         dailyActivitiesTime.add(String.valueOf(drivingTime));
@@ -462,7 +490,8 @@ public class HistoryApiManager {
     }
 
     public List<ArrayList<String>> getWeeklyActivitiesTime(){
-        queryCurrentDayFitnessData();
+//        queryEachDayFitnessData();
+        List<ArrayList<String>> weeklyActivitiesTime= new ArrayList<ArrayList<String>>();
 
         ArrayList<String> weeklyWalkTimeString = new ArrayList<String>();
         for(Long time: weeklyWalkTime){

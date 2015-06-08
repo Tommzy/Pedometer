@@ -32,6 +32,12 @@
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings" >
         </activity>
+
+        <service
+            android:name=".SleepDetectService"
+            android:enabled="false"
+            android:exported="false" >
+        </service>
     </application>
 
 </manifest>

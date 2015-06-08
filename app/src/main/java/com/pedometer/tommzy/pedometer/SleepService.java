@@ -43,6 +43,7 @@ import java.util.TimerTask;
 
 public class SleepService extends Service {
     private static final int SAMPLE_RATE = 1000;
+    public static final String TAG = "SleepSerivce";
 
     SensorManager sensorMgr = null;
     Sensor lightSensor = null;
@@ -104,7 +105,7 @@ public class SleepService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d("SleepService", "onCreate");
+        Log.d(TAG, "SleepService onCreate");
 
         // Create the calibrateTimer
         timer = new Timer();
@@ -139,7 +140,7 @@ public class SleepService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.d("SleepService", "onDestroy");
+        Log.i(TAG,"SleepService onDestroy");
 
         // Alert the user
         Toast.makeText(this, "Sleep Tracking Stopped", Toast.LENGTH_LONG).show();
@@ -151,7 +152,7 @@ public class SleepService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startid) {
-        Log.d("SleepService", "onStartCommand");
+        Log.i(TAG,"SleepService onStartCommand");
 
 
         // Start the light sensor
@@ -200,11 +201,11 @@ public class SleepService extends Service {
 
         //Time check first
         if (!SleepHourCheck()) {
-            Log.d("StopSleepTracking:", "Outside hour range.");
+            Log.i(TAG,"StopSleepTracking:Outside hour range.");
         } else {
             // Check all conditions to see if user fell asleep
             if (!isAsleep && SleepHourCheck() && SleepLightCheck() && SleepAudioCheck()) {
-                Log.d("SleepMonitor", "Fell Asleep:" + fallAsleepTime);
+                Log.i(TAG, "SleepMonitor Fell Asleep:" + fallAsleepTime);
 
                 isAsleep = true;
 
@@ -213,7 +214,7 @@ public class SleepService extends Service {
 
             // Check to see if user woke up
             if (isAsleep && (!SleepHourCheck() || !SleepLightCheck() || !SleepAudioCheck())) {
-                Log.d("SleepMonitor", "Woke Up:" + fallAsleepTime);
+                Log.i(TAG,"SleepMonitor Woke Up:" + fallAsleepTime);
 
                 isAsleep = false;
                 wakeUpTime = getTime('W');
@@ -231,7 +232,7 @@ public class SleepService extends Service {
                 }
 
                 totalDuration = getDuration();
-                Log.d("getDuration", "Adding " + Float.toString(getDuration()));
+                Log.i(TAG,"getDuration Adding " + Float.toString(getDuration()));
 //
 //                todaysHours.setText("Hours Slept Today: " + getHoursTodayFormatted());
 //                todaysEfficiency.setText("Today's Efficiency: " + getEfficiency());
@@ -324,7 +325,7 @@ public class SleepService extends Service {
      * @return current time in HH:MM:SS format
      */
     private String getTime(char set) {
-        Log.d("getTime", "Getting current time");
+        Log.d(TAG,"getTime Getting current time");
         Calendar c = Calendar.getInstance();
         int hour = c.get(Calendar.HOUR);
         int minute = c.get(Calendar.MINUTE);
@@ -334,14 +335,14 @@ public class SleepService extends Service {
             hour = 12;
         }
 
-        Log.d("CurrentTime", Integer.toString(hour) + ":" + Integer.toString(minute) + getAmPm());
+        Log.i(TAG,"CurrentTime"+ Integer.toString(hour) + ":" + Integer.toString(minute) + getAmPm());
 
         //if the new sleep time is gotten, set it globally
         if (set == 'S') {
             sleepHour = hour;
             sleepMin = minute;
             sleepAmPm = getAmPm();
-            Log.d("SetSleepTime", Integer.toString(sleepHour) + ":" + Integer.toString(sleepMin) + sleepAmPm);
+            Log.i(TAG,"SetSleepTime"+Integer.toString(sleepHour) + ":" + Integer.toString(sleepMin) + sleepAmPm);
         }
 
         //if the new wake time is gotten, set it globally
@@ -349,7 +350,7 @@ public class SleepService extends Service {
             wakeHour = hour;
             wakeMin = minute;
             wakeAmPm = getAmPm();
-            Log.d("SetWakeTime", Integer.toString(wakeHour) + ":" + Integer.toString(wakeMin) + wakeAmPm);
+            Log.i(TAG,"SetWakeTime" + Integer.toString(wakeHour) + ":" + Integer.toString(wakeMin) + wakeAmPm);
         }
 
         return Integer.toString(hour) + ":" + Integer.toString(minute) + getAmPm();
