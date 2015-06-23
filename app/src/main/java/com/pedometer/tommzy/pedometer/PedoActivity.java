@@ -256,7 +256,6 @@ public class PedoActivity extends ActionBarActivity implements IStepView{
     }
 
 
-
     /**
      * When using the ActionBarDrawerToggle, you must call it during
      * onPostCreate() and onConfigurationChanged()...
@@ -464,9 +463,6 @@ public class PedoActivity extends ActionBarActivity implements IStepView{
                             currentActivity=null;
                         }
                     }
-
-
-
                 }
 
                 if(action.equalsIgnoreCase("SleepDetectingResult")){
@@ -518,6 +514,7 @@ public class PedoActivity extends ActionBarActivity implements IStepView{
     public void startSleepService(){
         if (!isServiceRunning(this, SleepService.class)) {
             this.startService(new Intent(this, SleepService.class));
+            this.startService(new Intent(this,SleepDetectService.class));
         }
     }
 

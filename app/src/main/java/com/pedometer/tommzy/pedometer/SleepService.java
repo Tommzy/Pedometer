@@ -19,12 +19,15 @@ package com.pedometer.tommzy.pedometer;
 */
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.MediaRecorder;
+import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
@@ -33,6 +36,7 @@ import android.widget.Toast;
 
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -42,11 +46,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class SleepService extends Service {
-    private static final int SAMPLE_RATE = 1000;
     public static final String TAG = "SleepSerivce";
 
-    SensorManager sensorMgr = null;
-    Sensor lightSensor = null;
     float lightIntensity;
 
 
@@ -56,8 +57,8 @@ public class SleepService extends Service {
     Timer timer;
 
     // Calibrated Sensor Data (defaults set if left uncalibrated)
-    private float calibratedLight = 15;
-    private int calibratedAmplitude = 200;
+    private float calibratedLight = 19;
+    private int calibratedAmplitude = 300;
     private int calibratedSleepHour = 8;
     private int calibratedWakeHour = 12;
 
@@ -69,13 +70,12 @@ public class SleepService extends Service {
     private float avgBy = 0;
     private int threshold = 3;
     private int wakeup = 0;
-    MediaRecorder mRecorder;
 
     // Tracking Statuses
     private boolean isTracking = true;
     private boolean isAsleep = false;
     private int numWakeups = 0;
-    private int efficiency;
+    private double stationary=0.00;
 
     // Final Sleep Times
     private String fallAsleepTime = "";
@@ -92,9 +92,49 @@ public class SleepService extends Service {
     private int date;
     private Date now;
 
-    private TextView trackingStatus;
-    private TextView todaysHours;
-    private TextView todaysEfficiency;
+
+    private final BroadcastReceiver recieveFromSleepService = new BroadcastReceiver() {
+        @Override
+
+        public void onReceive(Context context, Intent intent) {
+
+            String action = intent.getAction();
+
+            Calendar calendar = new GregorianCalendar();
+            calendar.setTime(new Date());
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("MMddyyyy", Locale.US);
+            date = Integer.valueOf(dateFormat.format(calendar.getTime()));
+
+            if (action.equals("SensorData")) {
+                Bundle extras = intent.getExtras();
+
+                try {
+                    String maxAmplitudeIn = extras.getString("maxAmplitude");
+                    String lightIntensityIn = extras.getString("lightIntensity");
+
+                    audioAmplitude = Integer.parseInt(maxAmplitudeIn);
+                    lightIntensity = Float.parseFloat(lightIntensityIn);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                checkSleepStatus();
+            }
+
+            if(action.equalsIgnoreCase("Activity_Message")){
+                Bundle extra = intent.getExtras();
+                String activityType = extra.getString("ActivityType");
+                Log.i(TAG, activityType);
+
+                if((!activityType.equalsIgnoreCase("still"))){
+                    stationary=54.45;
+                }else{
+                    stationary=0.00;
+                }
+            }
+        }
+    };
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -102,120 +142,119 @@ public class SleepService extends Service {
     }
 
 
+
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "SleepService onCreate");
 
+        isTracking = true;
+
         // Create the calibrateTimer
         timer = new Timer();
-
-        // Set up light sensor
-        sensorMgr = (SensorManager) this.getSystemService(SENSOR_SERVICE);
-        lightSensor = sensorMgr.getDefaultSensor(Sensor.TYPE_LIGHT);
-
-        // Set up media recorder
-        mRecorder = new MediaRecorder();
-        mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-
-        String mFileName = this.getCacheDir().getAbsolutePath();
-        mFileName += "/sleep_audio.3gp";
-        mRecorder.setOutputFile(mFileName);
-
-        mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-
-    }
-
-    SensorEventListener sensorListener = new SensorEventListener() {
-        @Override
-        public void onSensorChanged(SensorEvent event) {
-            lightIntensity = event.values[0];
-        }
-
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        }
-    };
-
-    @Override
-    public void onDestroy() {
-        Log.i(TAG,"SleepService onDestroy");
-
-        // Alert the user
-        Toast.makeText(this, "Sleep Tracking Stopped", Toast.LENGTH_LONG).show();
-
-        // Stop the calibrateTimer
-        timer.cancel();
-
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startid) {
-        Log.i(TAG,"SleepService onStartCommand");
+        now = new Date();
+        dateFormat = new SimpleDateFormat("MMddyyyy", Locale.US);
+        startSleepTracking();
 
 
-        // Start the light sensor
-        sensorMgr.registerListener(sensorListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
-
-        // Start sampling the sensors
-        //TODO change sample Sensors to pass data to some methods
-        sampleSensors();
-
-        // Don't want to auto restart the service
-        return START_NOT_STICKY;
     }
 
     /**
-     * sampleSensors()
-     * Gets light and sound data from sensors at a fixed rate and sends broadcast with the values in
-     * it (reveiced in the SleepFragment)
+     * startSleepTracking()
+     * Begins tracking sleep
      */
-    private void sampleSensors() {
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                Calendar calendar = new GregorianCalendar();
-                calendar.setTime(new Date());
+    private void startSleepTracking() {
+        isTracking = true;
 
-                SimpleDateFormat dateFormat = new SimpleDateFormat("MMddyyyy", Locale.US);
-                date = Integer.valueOf(dateFormat.format(calendar.getTime()));
+        Log.d("SleepFragment", "Starting sleep service");
 
-                audioAmplitude = Integer.valueOf(mRecorder.getMaxAmplitude());
-                lightIntensity = Float.valueOf(lightIntensity);
+        totalDuration = 0.0F;
 
-                mRecorder.getMaxAmplitude();
+//        if (isTracking) {
+//            calibrateSensors();
+//        } else {
+            checkSleepStatus();
+//        }
+    }
+
+
+    /**
+     * stopSleepTracking()
+     * Stops tracking sleep
+     */
+    private void stopSleepTracking() {
+//        getActivity().stopService(new Intent(getActivity(), SleepService.class));//TODO ask activity to shutdown the service
+        Log.d("SleepFragment", "Stopping sleep service");
+
+        isTracking = false;
+    }
+
+    /**
+     * calibrateSensors()
+     * Calibrates the light/sound levels by getting avgs (get values every 1sec for 10sec period) and
+     * adding a preset margin to allow for movement/daybreak
+     */
+    private void calibrateSensors() {
+
+        calibratedLight = 0;
+        calibratedAmplitude = 0;
+        avgBy = -1; //first light value is 0 and needs to be disregarded
+
+        calibrateTimer = new CountDownTimer((CALIBRATE_TIME * 1000), 1000) {
+            public void onTick(long millisUntilFinished) {
+                //add up total values for averaging
+                calibratedLight += lightIntensity;
+                calibratedAmplitude += audioAmplitude;
+                avgBy++;
+            }
+
+            public void onFinish() {
+                //calculate avgs
+                calibratedLight = Math.round(calibratedLight / avgBy);
+                calibratedAmplitude = calibratedAmplitude / Math.round(avgBy);
+
+                //after averages are calculated, add in some margin of noise/light
+                calibratedLight += LIGHT_MARGIN;
+                calibratedAmplitude += NOISE_MARGIN;
+
+                Log.d("SleepMonitor", "Calibrated sensors");
 
                 checkSleepStatus();
 
+                calibrateTimer.cancel();
             }
-        }, 0, SAMPLE_RATE);
+        }.start();
     }
+
 
     /**
      * checkSleepStatus()
      * Checks time and light/sound levels to see if the user falls within all sleep thresholds,
      * sets isAsleep equal to true or false and sets fallAsleepTime and wakeUpTime
      */
+    //TODO Add equation here
     private void checkSleepStatus() {
 
         //Time check first
         if (!SleepHourCheck()) {
-            Log.i(TAG,"StopSleepTracking:Outside hour range.");
-        } else {
+            Log.d("StopSleepTracking:", "Outside hour range.");
+            stopSleepTracking();
+        }         else {
             // Check all conditions to see if user fell asleep
             if (!isAsleep && SleepHourCheck() && SleepLightCheck() && SleepAudioCheck()) {
-                Log.i(TAG, "SleepMonitor Fell Asleep:" + fallAsleepTime);
+                Log.d("SleepMonitor", "Fell Asleep:" + fallAsleepTime);
 
-                isAsleep = true;
-
-                fallAsleepTime = getTime('S');
+                if(getSleepSum()>75) {
+                    isAsleep = true;
+                    fallAsleepTime = getTime('S');
+                }else{
+                    isAsleep=false;
+                }
             }
 
             // Check to see if user woke up
             if (isAsleep && (!SleepHourCheck() || !SleepLightCheck() || !SleepAudioCheck())) {
-                Log.i(TAG,"SleepMonitor Woke Up:" + fallAsleepTime);
-
+                Log.d("SleepMonitor", "Woke Up:" + fallAsleepTime);
                 isAsleep = false;
                 wakeUpTime = getTime('W');
                 wakeup++;
@@ -232,13 +271,88 @@ public class SleepService extends Service {
                 }
 
                 totalDuration = getDuration();
-                Log.i(TAG,"getDuration Adding " + Float.toString(getDuration()));
-//
-//                todaysHours.setText("Hours Slept Today: " + getHoursTodayFormatted());
-//                todaysEfficiency.setText("Today's Efficiency: " + getEfficiency());
+                Log.d("getDuration", "Adding " + Float.toString(getDuration()));
+
+                Utils.todaysSleepHours += Float.valueOf(totalDuration);
+                //TODO √øÃÏ«Â¡„
             }
         }
     }
+
+
+    /**
+     * getTime(char set)
+     * Gets the time in HH:MM:SS format, takes in a char if the sleep/wake variables need to be reset
+     *
+     * @param set flag if the sleep/wake times need to be updated
+     * @return current time in HH:MM:SS format
+     */
+    private String getTime(char set) {
+        Log.d("getTime", "Getting current time");
+        Calendar c = Calendar.getInstance();
+        int hour = c.get(Calendar.HOUR);
+        int minute = c.get(Calendar.MINUTE);
+
+        //12:00 AM is treated as hour 0
+        if (hour == 0) {
+            hour = 12;
+        }
+
+        Log.d("CurrentTime", Integer.toString(hour) + ":" + Integer.toString(minute) + getAmPm());
+
+        //if the new sleep time is gotten, set it globally
+        if (set == 'S') {
+            sleepHour = hour;
+            sleepMin = minute;
+            sleepAmPm = getAmPm();
+            Log.d("SetSleepTime", Integer.toString(sleepHour) + ":" + Integer.toString(sleepMin) + sleepAmPm);
+        }
+
+        //if the new wake time is gotten, set it globally
+        if (set == 'W') {
+            wakeHour = hour;
+            wakeMin = minute;
+            wakeAmPm = getAmPm();
+            Log.d("SetWakeTime", Integer.toString(wakeHour) + ":" + Integer.toString(wakeMin) + wakeAmPm);
+        }
+
+        return Integer.toString(hour) + ":" + Integer.toString(minute) + getAmPm();
+    }
+
+
+
+    private String getHoursTodayFormatted() {
+        Calendar calendar = new GregorianCalendar();
+        calendar.setTime(new Date());
+
+        //       SimpleDateFormat dateFormat = new SimpleDateFormat("MMddyyyy", Locale.US);
+        //       int date = Integer.valueOf(dateFormat.format(calendar.getTime()));
+
+        float todaysHours =  Utils.todaysSleepHours;
+
+        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+        return String.valueOf(decimalFormat.format(todaysHours));
+    }
+
+    /**
+     * getAmPm()
+     * Checks to see if time of day is AM or PM
+     *
+     * @return string containing either "AM" or "PM"
+     */
+    private String getAmPm() {
+        Calendar c = Calendar.getInstance();
+        int am_pm = c.get(Calendar.AM_PM);
+        String amPm;
+
+        if (am_pm == 0)
+            amPm = "AM";
+        else
+            amPm = "PM";
+
+        return amPm;
+    }
+
 
     /**
      * SleepHourCheck()
@@ -269,25 +383,6 @@ public class SleepService extends Service {
         return false;
     }
 
-    /**
-     * getAmPm()
-     * Checks to see if time of day is AM or PM
-     *
-     * @return string containing either "AM" or "PM"
-     */
-    private String getAmPm() {
-        Calendar c = Calendar.getInstance();
-        int am_pm = c.get(Calendar.AM_PM);
-        String amPm;
-
-        if (am_pm == 0)
-            amPm = "AM";
-        else
-            amPm = "PM";
-
-        return amPm;
-    }
-
 
     /**
      * SleepLightCheck()
@@ -295,14 +390,18 @@ public class SleepService extends Service {
      *
      * @return true if light level is valid, false if light level is not valid
      */
+    double sleeplight=0.00;
     private boolean SleepLightCheck() {
         if (lightIntensity < calibratedLight) {
+            sleeplight=(1-(lightIntensity/calibratedAmplitude))*4.15;
+            if(sleeplight<2.5){
+                return false;
+            }
             return true;
         }
+        sleeplight=0;
         return false;
     }
-
-    //check to see if audio is below valid level
 
     /**
      * SleepAudioCheck()
@@ -310,51 +409,20 @@ public class SleepService extends Service {
      *
      * @return true if sound level is valid, false if sound level is not valid
      */
+    double audioValue=0.00;
     private boolean SleepAudioCheck() {
+
         if (audioAmplitude < calibratedAmplitude) {
+            audioValue=(1-(audioAmplitude/calibratedAmplitude))*(34.84);
+            if(audioValue<30){
+                return false;
+            }
             return true;
         }
+        audioValue=0;
         return false;
     }
 
-    /**
-     * getTime(char set)
-     * Gets the time in HH:MM:SS format, takes in a char if the sleep/wake variables need to be reset
-     *
-     * @param set flag if the sleep/wake times need to be updated
-     * @return current time in HH:MM:SS format
-     */
-    private String getTime(char set) {
-        Log.d(TAG,"getTime Getting current time");
-        Calendar c = Calendar.getInstance();
-        int hour = c.get(Calendar.HOUR);
-        int minute = c.get(Calendar.MINUTE);
-
-        //12:00 AM is treated as hour 0
-        if (hour == 0) {
-            hour = 12;
-        }
-
-        Log.i(TAG,"CurrentTime"+ Integer.toString(hour) + ":" + Integer.toString(minute) + getAmPm());
-
-        //if the new sleep time is gotten, set it globally
-        if (set == 'S') {
-            sleepHour = hour;
-            sleepMin = minute;
-            sleepAmPm = getAmPm();
-            Log.i(TAG,"SetSleepTime"+Integer.toString(sleepHour) + ":" + Integer.toString(sleepMin) + sleepAmPm);
-        }
-
-        //if the new wake time is gotten, set it globally
-        if (set == 'W') {
-            wakeHour = hour;
-            wakeMin = minute;
-            wakeAmPm = getAmPm();
-            Log.i(TAG,"SetWakeTime" + Integer.toString(wakeHour) + ":" + Integer.toString(wakeMin) + wakeAmPm);
-        }
-
-        return Integer.toString(hour) + ":" + Integer.toString(minute) + getAmPm();
-    }
 
     /**
      * getDuration()
@@ -415,5 +483,22 @@ public class SleepService extends Service {
 
         return (float)duration;
     }
+
+    double getSleepSum(){
+        PowerConnectionReceiver powerConnectionReceiver = new PowerConnectionReceiver();
+        double charged = 0.00;
+        if(PowerConnectionReceiver.getIsChargePluged()){
+            charged=4.69;
+        }
+
+//        audio 34.84
+//        light 4.15
+//        phone charing 4.69
+//        stationary 54.45
+//        total  98.13
+        Log.d("SleepValueSum",String.valueOf(audioValue+sleeplight+charged+stationary));
+        return audioValue+sleeplight+charged+stationary;
+    }
+
 
 }

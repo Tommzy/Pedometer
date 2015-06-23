@@ -14,6 +14,8 @@ import android.os.IBinder;
 import android.util.Log;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -21,39 +23,16 @@ public class SleepDetectService extends Service {
     private static final int SAMPLE_RATE = 1000;
     public static final String TAG = "SleepDetectService";
 
+    MediaRecorder mRecorder;
     SensorManager sensorMgr = null;
     Sensor lightSensor = null;
     float lightIntensity;
-
-
-    // Raw Sensor Data
-    private int audioAmplitude;
-
     Timer timer;
-
-    // Calibrated Sensor Data (defaults set if left uncalibrated)
-    private float calibratedLight = 15;
-    private int calibratedAmplitude = 200;
-    private int calibratedSleepHour = 8;
-    private int calibratedWakeHour = 12;
-
-    // Calibration
-    private final int CALIBRATE_TIME = 10;
-    private final int NOISE_MARGIN = 200;
-    private final int LIGHT_MARGIN = 15;
-    private CountDownTimer calibrateTimer;
-    private float avgBy = 0;
-    private int threshold = 3;
-    private int wakeup = 0;
-    MediaRecorder mRecorder;
-
-    public SleepDetectService() {
-    }
 
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
+        throw null;
     }
 
     @Override
@@ -63,7 +42,6 @@ public class SleepDetectService extends Service {
 
         // Create the calibrateTimer
         timer = new Timer();
-
         // Set up light sensor
         sensorMgr = (SensorManager) this.getSystemService(SENSOR_SERVICE);
         lightSensor = sensorMgr.getDefaultSensor(Sensor.TYPE_LIGHT);
@@ -72,11 +50,7 @@ public class SleepDetectService extends Service {
         mRecorder = new MediaRecorder();
         mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-
-        String mFileName = this.getCacheDir().getAbsolutePath();
-        mFileName += "/sleep_audio.3gp";
-        mRecorder.setOutputFile(mFileName);
-
+        mRecorder.setOutputFile(Utils.getAudioSampleFilePath(this));
         mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 
     }
