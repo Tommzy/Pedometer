@@ -22,6 +22,7 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -157,9 +158,10 @@ public class SleepService extends Service {
         timer = new Timer();
         now = new Date();
         dateFormat = new SimpleDateFormat("MMddyyyy", Locale.US);
+        IntentFilter intentFilter = new IntentFilter("SensorData");
+        registerReceiver(recieveFromSleepService, intentFilter);
+        calibrateSensors();
         startSleepTracking();
-
-
     }
 
     /**
@@ -173,11 +175,8 @@ public class SleepService extends Service {
 
         totalDuration = 0.0F;
 
-//        if (isTracking) {
 //            calibrateSensors();
-//        } else {
-            checkSleepStatus();
-//        }
+        checkSleepStatus();
     }
 
 

@@ -267,7 +267,6 @@ public class PedoActivity extends ActionBarActivity implements IStepView {
      * When using the ActionBarDrawerToggle, you must call it during
      * onPostCreate() and onConfigurationChanged()...
      */
-
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
@@ -462,38 +461,38 @@ public class PedoActivity extends ActionBarActivity implements IStepView {
                     }
                 }
 
-                if(action.equalsIgnoreCase("SleepDetectingResult")){
-                    int charging = 0;
-
-                    Bundle extra = intent.getExtras();
-                    String activityType = extra.getString("soundAndLight");
-                    Log.i(TAG, activityType);
-
-                    startSleepService();
-
-                    if((!activityType.equalsIgnoreCase("unknown"))
-                            &&(!activityType.equalsIgnoreCase("still"))
-                            &&(!activityType.equalsIgnoreCase("tilting"))){
-
-                        if(getActivityType(activityType)!=null){
-                            setUpSession(getActivityType(activityType));
-                        }else{
-                            Log.i("Returned Null!!!!!",activityType);
-                        }
-
-                    }else{
-                        if(currentActivity!=null) {
-                            stopCurrentSession();
-                            currentActivity=null;
-                        }
-                    }
-
-                }
+//                if(action.equalsIgnoreCase("SleepDetectingResult")){
+//                    int charging = 0;
+//
+//                    Bundle extra = intent.getExtras();
+//                    String activityType = extra.getString("soundAndLight");
+//                    Log.i(TAG, activityType);
+//
+//
+//                    if((!activityType.equalsIgnoreCase("unknown"))
+//                            &&(!activityType.equalsIgnoreCase("still"))
+//                            &&(!activityType.equalsIgnoreCase("tilting"))){
+//
+//                        if(getActivityType(activityType)!=null){
+//                            setUpSession(getActivityType(activityType));
+//                        }else{
+//                            Log.i("Returned Null!!!!!",activityType);
+//                        }
+//
+//                    }else{
+//                        if(currentActivity!=null) {
+//                            stopCurrentSession();
+//                            currentActivity=null;
+//                        }
+//                    }
+//
+//                }
             }
         };
 //        registerReceiver(receiver, filter);
 
         mClient.connect();
+        startSleepService();
 
     }
 
@@ -1177,5 +1176,10 @@ public class PedoActivity extends ActionBarActivity implements IStepView {
 
         return calorie;
     }
+
+    //TODO: A. when detect weak,
+//    B. The time series: Eg, when the truck came, what is the value before and when the truck came and after the truck came.
+//    Event(time, duration) V.S the value.
+//            C: See the trigers and how the
 
 }

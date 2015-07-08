@@ -27,6 +27,10 @@
         <service
             android:name=".services.SleepService"
             android:enabled="true" />
+        <service
+            android:name=".services.SleepDetectService"
+            android:enabled="true">
+        </service>
 
         <activity
             android:name=".activities.SettingsActivity"
@@ -40,11 +44,7 @@
             </intent-filter>
         </receiver>
 
-        <service
-            android:name=".services.SleepDetectService"
-            android:enabled="false"
-            android:exported="false" >
-        </service>
+
     </application>
 
 </manifest>

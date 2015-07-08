@@ -2,22 +2,17 @@ package com.pedometer.tommzy.pedometer.services;
 
 import android.app.Service;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.MediaRecorder;
-import android.os.BatteryManager;
-import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
 
 import com.pedometer.tommzy.pedometer.Utils;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -111,32 +106,19 @@ public class SleepDetectService extends Service {
      * Gets light and sound data from sensors at a fixed rate and sends broadcast with the values in
      * it (reveiced in the SleepFragment)
      */
+    /**
+     * sampleSensors()
+     * Gets light and sound data from sensors at a fixed rate and sends broadcast with the values in
+     * it (reveiced in the SleepFragment)
+     */
     private void sampleSensors() {
-
         timer.scheduleAtFixedRate(new TimerTask() {
-
-            int value =60;
-            int sample = 0;
-
-
             @Override
             public void run() {
-
-
-                while(true){
-                    if (mRecorder.getMaxAmplitude()<220){
-                        sample = sample + 35;
-                    }
-                    if(lightIntensity<15){
-                        sample = sample + 5;
-                    }
-                    if( sample>value){
-                        Intent i = new Intent("SleepDetectingResult");
-                        i.putExtra("soundAndLight", Integer.toString(sample));
-                        sendBroadcast(i);
-                    }
-
-                }
+                Intent i = new Intent("SensorData");
+                i.putExtra("maxAmplitude", Integer.toString(mRecorder.getMaxAmplitude()));
+                i.putExtra("lightIntensity", Float.toString(lightIntensity));
+                sendBroadcast(i);
 
             }
         }, 0, SAMPLE_RATE);
