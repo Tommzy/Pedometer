@@ -1,4 +1,4 @@
-package com.pedometer.tommzy.pedometer;
+package com.pedometer.tommzy.pedometer.services;
 /**
 * SleepService.java
 * Sam Fitness
@@ -34,6 +34,9 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
+import com.pedometer.tommzy.pedometer.PowerConnectionReceiver;
+import com.pedometer.tommzy.pedometer.Utils;
 
 import java.io.IOException;
 import java.text.DecimalFormat;

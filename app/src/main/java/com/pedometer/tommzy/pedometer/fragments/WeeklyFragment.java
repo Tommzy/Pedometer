@@ -1,4 +1,4 @@
-package com.pedometer.tommzy.pedometer;
+package com.pedometer.tommzy.pedometer.fragments;
 
 import android.app.Fragment;
 import android.graphics.Typeface;
@@ -19,6 +19,8 @@ import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.listener.OnChartGestureListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
+import com.pedometer.tommzy.pedometer.R;
+import com.pedometer.tommzy.pedometer.apimanager.HistoryApiManager;
 
 import java.util.ArrayList;
 import java.util.Iterator;

@@ -10,7 +10,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".PedoActivity"
+            android:name=".activities.PedoActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/app_name"
             android:screenOrientation="portrait" >
@@ -22,14 +22,14 @@
         </activity>
 
         <service
-            android:name=".ActivityRecognitionIntentService"
+            android:name=".services.ActivityRecognitionIntentService"
             android:enabled="true" />
         <service
-            android:name=".SleepService"
+            android:name=".services.SleepService"
             android:enabled="true" />
 
         <activity
-            android:name=".SettingsActivity"
+            android:name=".activities.SettingsActivity"
             android:label="@string/title_activity_settings" >
         </activity>
 
@@ -41,7 +41,7 @@
         </receiver>
 
         <service
-            android:name=".SleepDetectService"
+            android:name=".services.SleepDetectService"
             android:enabled="false"
             android:exported="false" >
         </service>

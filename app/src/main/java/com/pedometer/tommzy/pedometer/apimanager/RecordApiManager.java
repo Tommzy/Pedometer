@@ -1,4 +1,4 @@
-package com.pedometer.tommzy.pedometer;
+package com.pedometer.tommzy.pedometer.apimanager;
 
 import android.content.Context;
 import android.util.Log;
@@ -9,12 +9,8 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
-import com.google.android.gms.fitness.data.Subscription;
-import com.google.android.gms.fitness.result.ListSubscriptionsResult;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import com.pedometer.tommzy.pedometer.activities.PedoActivity;
+import com.pedometer.tommzy.pedometer.apimanager.HistoryApiManager;
 
 /**
  * Created by Tommzy on 4/20/2015.

@@ -1,6 +1,5 @@
-package com.pedometer.tommzy.pedometer;
+package com.pedometer.tommzy.pedometer.apimanager;
 
-import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 
@@ -14,6 +13,8 @@ import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
 import com.google.android.gms.fitness.request.DataReadRequest;
 import com.google.android.gms.fitness.result.DataReadResult;
+import com.pedometer.tommzy.pedometer.services.ActivityRecognitionIntentService;
+import com.pedometer.tommzy.pedometer.IStepView;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -219,7 +220,7 @@ public class HistoryApiManager {
                 }
 
             }else if(dp.getDataType().getFields().get(0).getName().equalsIgnoreCase("activity")){
-                Log.i(TAG,  "The activity is: "+ActivityRecognitionIntentService.getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0))))));
+                Log.i(TAG,  "The activity is: "+ ActivityRecognitionIntentService.getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0))))));
 
                 if(ActivityRecognitionIntentService.
                         getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0)))))

@@ -1,4 +1,4 @@
-package com.pedometer.tommzy.pedometer;
+package com.pedometer.tommzy.pedometer.activities;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -11,6 +11,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+
+import com.pedometer.tommzy.pedometer.R;
 
 /**
  * Created by Tommzy on 4/14/2015.

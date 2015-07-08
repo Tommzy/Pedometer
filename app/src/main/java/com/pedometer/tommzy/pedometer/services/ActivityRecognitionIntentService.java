@@ -1,4 +1,4 @@
-package com.pedometer.tommzy.pedometer;
+package com.pedometer.tommzy.pedometer.services;
 
 import android.app.IntentService;
 import android.content.Context;

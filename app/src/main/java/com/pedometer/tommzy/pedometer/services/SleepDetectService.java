@@ -1,4 +1,4 @@
-package com.pedometer.tommzy.pedometer;
+package com.pedometer.tommzy.pedometer.services;
 
 import android.app.Service;
 import android.content.Intent;
@@ -12,6 +12,8 @@ import android.os.BatteryManager;
 import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
+
+import com.pedometer.tommzy.pedometer.Utils;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;

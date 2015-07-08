@@ -1,4 +1,4 @@
-package com.pedometer.tommzy.pedometer;
+package com.pedometer.tommzy.pedometer.activities;
 
 import android.app.ActivityManager;
 import android.app.Fragment;
@@ -13,7 +13,6 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
-import android.os.BatteryManager;
 import android.os.Bundle;
 
 
@@ -58,12 +57,20 @@ import com.google.android.gms.fitness.data.Value;
 import com.google.android.gms.fitness.request.SensorRequest;
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.DetectedActivity;
+import com.pedometer.tommzy.pedometer.services.ActivityRecognitionIntentService;
+import com.pedometer.tommzy.pedometer.fragments.DailyFragment;
+import com.pedometer.tommzy.pedometer.apimanager.HistoryApiManager;
+import com.pedometer.tommzy.pedometer.IStepView;
+import com.pedometer.tommzy.pedometer.R;
+import com.pedometer.tommzy.pedometer.apimanager.RecordApiManager;
+import com.pedometer.tommzy.pedometer.apimanager.SessionApiManager;
+import com.pedometer.tommzy.pedometer.services.SleepDetectService;
+import com.pedometer.tommzy.pedometer.services.SleepService;
+import com.pedometer.tommzy.pedometer.fragments.WeeklyFragment;
 
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -71,7 +78,7 @@ import java.util.concurrent.TimeUnit;
 
 
 
-public class PedoActivity extends ActionBarActivity implements IStepView{
+public class PedoActivity extends ActionBarActivity implements IStepView {
     // public final static String EXTRA_MESSAGE = "com.pedometer.tommzy.pedometer.MESSAGE";
     private GoogleApiClient mClient = null;
     public static final String TAG = "PedoActivity";
@@ -350,11 +357,6 @@ public class PedoActivity extends ActionBarActivity implements IStepView{
                             @Override
                             public void onConnected(Bundle bundle) {
                                 Log.i(TAG, "Connected!!!");
-                                // Now you can make calls to the Fitness APIs.
-                                // Put application specific code here.
-                                // [END auth_build_googleapiclient_beginning]
-                                //  What to do? Find some data sources!
-//                                if (firstConnect) {
                                 findFitnessDataSources();
                                 subscribeFitnessData();
                                 retrieveFitnessData();
@@ -362,11 +364,6 @@ public class PedoActivity extends ActionBarActivity implements IStepView{
                                         .ActivityRecognitionApi
                                         .requestActivityUpdates(mClient, 0, mActivityRecognitionPendingIntent);
                                 firstConnect = false;
-//                                    Log.i(TAG, "First connect! Regester Everything!");
-//                                } else {
-//                                    Log.i(TAG, "just resumed...");
-//                                }
-                                // [START auth_build_googleapiclient_ending]
                             }
 
                             @Override
@@ -472,18 +469,7 @@ public class PedoActivity extends ActionBarActivity implements IStepView{
                     String activityType = extra.getString("soundAndLight");
                     Log.i(TAG, activityType);
 
-                    // Are we charging / charged?
-//                    int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-//                    boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-//                            status == BatteryManager.BATTERY_STATUS_FULL;
-
-//                    if (isCharging){
-//                        charging = 40;
-//                    }
-
-                    if((Integer.valueOf(activityType)+charging)>90){
-                        startSleepService();
-                    }
+                    startSleepService();
 
                     if((!activityType.equalsIgnoreCase("unknown"))
                             &&(!activityType.equalsIgnoreCase("still"))

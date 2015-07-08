@@ -1,7 +1,9 @@
-package com.pedometer.tommzy.pedometer;
+package com.pedometer.tommzy.pedometer.activities;
 
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
+
+import com.pedometer.tommzy.pedometer.fragments.SettingsFragment;
 
 
 /**

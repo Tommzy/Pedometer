@@ -3,15 +3,15 @@
     <!-- These settings headers are only used on tablets. -->
 
     <header
-        android:fragment="com.pedometer.tommzy.pedometer.SettingsActivity$GeneralPreferenceFragment"
+        android:fragment="com.pedometer.tommzy.pedometer.activities.SettingsActivity$GeneralPreferenceFragment"
         android:title="@string/pref_header_general" />
 
     <header
-        android:fragment="com.pedometer.tommzy.pedometer.SettingsActivity$NotificationPreferenceFragment"
+        android:fragment="com.pedometer.tommzy.pedometer.activities.SettingsActivity$NotificationPreferenceFragment"
         android:title="@string/pref_header_notifications" />
 
     <header
-        android:fragment="com.pedometer.tommzy.pedometer.SettingsActivity$DataSyncPreferenceFragment"
+        android:fragment="com.pedometer.tommzy.pedometer.activities.SettingsActivity$DataSyncPreferenceFragment"
         android:title="@string/pref_header_data_sync" />
 
 </preference-headers>
