@@ -9,8 +9,7 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessStatusCodes;
 import com.google.android.gms.fitness.data.DataType;
-import com.pedometer.tommzy.pedometer.activities.PedoActivity;
-import com.pedometer.tommzy.pedometer.apimanager.HistoryApiManager;
+import com.pedometer.tommzy.pedometer.PedoActivity;
 
 /**
  * Created by Tommzy on 4/20/2015.

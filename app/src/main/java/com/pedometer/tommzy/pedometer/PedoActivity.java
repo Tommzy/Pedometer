@@ -1,4 +1,4 @@
-package com.pedometer.tommzy.pedometer.activities;
+package com.pedometer.tommzy.pedometer;
 
 import android.app.ActivityManager;
 import android.app.Fragment;
@@ -57,11 +57,10 @@ import com.google.android.gms.fitness.data.Value;
 import com.google.android.gms.fitness.request.SensorRequest;
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.DetectedActivity;
+import com.pedometer.tommzy.pedometer.activities.SettingsActivity;
 import com.pedometer.tommzy.pedometer.services.ActivityRecognitionIntentService;
 import com.pedometer.tommzy.pedometer.fragments.DailyFragment;
 import com.pedometer.tommzy.pedometer.apimanager.HistoryApiManager;
-import com.pedometer.tommzy.pedometer.IStepView;
-import com.pedometer.tommzy.pedometer.R;
 import com.pedometer.tommzy.pedometer.apimanager.RecordApiManager;
 import com.pedometer.tommzy.pedometer.apimanager.SessionApiManager;
 import com.pedometer.tommzy.pedometer.services.SleepDetectService;
@@ -69,7 +68,6 @@ import com.pedometer.tommzy.pedometer.services.SleepService;
 import com.pedometer.tommzy.pedometer.fragments.WeeklyFragment;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -492,7 +490,7 @@ public class PedoActivity extends ActionBarActivity implements IStepView {
 //        registerReceiver(receiver, filter);
 
         mClient.connect();
-        startSleepService();
+//        startSleepService();
 
     }
 
@@ -833,321 +831,6 @@ public class PedoActivity extends ActionBarActivity implements IStepView {
 
 
 
-    /**
-     * stopSleepRunnable()
-     * Procedure to stop sleep tracking that can be called from static classes
-     */
-    private Runnable stopSleepRunnable() {
-        return new Runnable() {
-            public void run() {
-                stopSleepTracking();
-            }
-        };
-    }
-
-    /**
-     * startSleepTracking()
-     * Begins tracking sleep
-     */
-    private void startSleepTracking() {
-        // Start service
-        this.startService(new Intent(this, SleepService.class));
-
-        isTracking = true;
-
-        Log.d("SleepFragment", "Starting sleep service");
-
-        Log.i(TAG,"Tracking...");
-        totalDuration = 0.0F;
-
-        if (isTracking) {
-            calibrateSensors();
-        } else {
-            checkSleepStatus();
-        }
-    }
-
-    /**
-     * stopSleepTracking()
-     * Stops tracking sleep
-     */
-    private void stopSleepTracking() {
-        this.stopService(new Intent(this, SleepService.class));
-        Log.d("SleepFragment", "Stopping sleep service");
-
-        isTracking = false;
-
-        Log.i(TAG,"Not Tracking...");
-    }
-
-    /**
-     * calibrateSensors()
-     * Calibrates the light/sound levels by getting avgs (get values every 1sec for 10sec period) and
-     * adding a preset margin to allow for movement/daybreak
-     */
-    private void calibrateSensors() {
-
-        Log.i(TAG,"Calibrating...");
-        calibratedLight = 0;
-        calibratedAmplitude = 0;
-        avgBy = -1; //first light value is 0 and needs to be disregarded
-
-        calibrateTimer = new CountDownTimer((CALIBRATE_TIME * 1000), 1000) {
-            public void onTick(long millisUntilFinished) {
-                //add up total values for averaging
-                calibratedLight += lightIntensity;
-                calibratedAmplitude += audioAmplitude;
-                avgBy++;
-            }
-
-            public void onFinish() {
-                //calculate avgs
-                calibratedLight = Math.round(calibratedLight / avgBy);
-                calibratedAmplitude = calibratedAmplitude / Math.round(avgBy);
-
-                //after averages are calculated, add in some margin of noise/light
-                calibratedLight += LIGHT_MARGIN;
-                calibratedAmplitude += NOISE_MARGIN;
-
-                Log.d("SleepMonitor", "Calibrated sensors");
-
-                checkSleepStatus();
-
-                if (isTracking) {
-                    Log.i(TAG,"Tracking...");;
-                } else {
-                    Log.i(TAG, "Not Tracking...");
-                }
-
-                calibrateTimer.cancel();
-            }
-        }.start();
-    }
-
-    /**
-     * checkSleepStatus()
-     * Checks time and light/sound levels to see if the user falls within all sleep thresholds,
-     * sets isAsleep equal to true or false and sets fallAsleepTime and wakeUpTime
-     */
-    private void checkSleepStatus() {
-
-        //Time check first
-        if (!SleepHourCheck()) {
-            Log.d("StopSleepTracking:", "Outside hour range.");
-            stopSleepTracking();
-        } else {
-            // Check all conditions to see if user fell asleep
-            if (!isAsleep && SleepHourCheck() && SleepLightCheck() && SleepAudioCheck()) {
-                Log.d("SleepMonitor", "Fell Asleep:" + fallAsleepTime);
-
-                isAsleep = true;
-
-                fallAsleepTime = getTime('S');
-            }
-
-            // Check to see if user woke up
-            if (isAsleep && (!SleepHourCheck() || !SleepLightCheck() || !SleepAudioCheck())) {
-                Log.d("SleepMonitor", "Woke Up:" + fallAsleepTime);
-
-                isAsleep = false;
-                wakeUpTime = getTime('W');
-                wakeup++;
-
-                if(wakeup >= threshold){
-                    numWakeups++;
-                    wakeup = 0;
-                }
-
-                if(numWakeups > 12){
-                    numWakeups = threshold - 2;
-                    wakeup = 0;
-                    threshold += 2;
-                }
-
-                totalDuration = getDuration();
-                Log.d("getDuration", "Adding " + Float.toString(getDuration()));
-//                sessionApiManager.startSession(startTime,endTime,"sleep");
-            }
-        }
-    }
-
-    /**
-     * getTime(char set)
-     * Gets the time in HH:MM:SS format, takes in a char if the sleep/wake variables need to be reset
-     *
-     * @param set flag if the sleep/wake times need to be updated
-     * @return current time in HH:MM:SS format
-     */
-    private String getTime(char set) {
-        Log.d("getTime", "Getting current time");
-        Calendar c = Calendar.getInstance();
-        int hour = c.get(Calendar.HOUR);
-        int minute = c.get(Calendar.MINUTE);
-
-        //12:00 AM is treated as hour 0
-        if (hour == 0) {
-            hour = 12;
-        }
-
-        Log.d("CurrentTime", Integer.toString(hour) + ":" + Integer.toString(minute) + getAmPm());
-
-        //if the new sleep time is gotten, set it globally
-        if (set == 'S') {
-            sleepHour = hour;
-            sleepMin = minute;
-            sleepAmPm = getAmPm();
-            Log.d("SetSleepTime", Integer.toString(sleepHour) + ":" + Integer.toString(sleepMin) + sleepAmPm);
-        }
-
-        //if the new wake time is gotten, set it globally
-        if (set == 'W') {
-            wakeHour = hour;
-            wakeMin = minute;
-            wakeAmPm = getAmPm();
-            Log.d("SetWakeTime", Integer.toString(wakeHour) + ":" + Integer.toString(wakeMin) + wakeAmPm);
-        }
-
-        return Integer.toString(hour) + ":" + Integer.toString(minute) + getAmPm();
-    }
-
-
-    /**
-     * getAmPm()
-     * Checks to see if time of day is AM or PM
-     *
-     * @return string containing either "AM" or "PM"
-     */
-    private String getAmPm() {
-        Calendar c = Calendar.getInstance();
-        int am_pm = c.get(Calendar.AM_PM);
-        String amPm;
-
-        if (am_pm == 0)
-            amPm = "AM";
-        else
-            amPm = "PM";
-
-        return amPm;
-    }
-
-    /**
-     * SleepHourCheck()
-     * Checks to see if the current hour is between the valid sleeping hours
-     *
-     * @return true if hour is valid, false if hour is not valid
-     */
-    private boolean SleepHourCheck() {
-        Calendar c = Calendar.getInstance();
-        int hour = c.get(Calendar.HOUR);
-        String amPm = getAmPm();
-
-        if (hour == 0) {
-            hour = 12;
-        }
-
-        if (hour == 12 && amPm.equals("PM")) {
-            return false;
-        }
-
-        if (hour == 12 && amPm.equals("AM")) {
-            return true;
-        }
-
-        if ((hour >= calibratedSleepHour && amPm.equals("PM")) || (hour < calibratedWakeHour && amPm.equals("AM"))) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * SleepLightCheck()
-     * Checks to see if the light level is below the valid sleeping light level
-     *
-     * @return true if light level is valid, false if light level is not valid
-     */
-    private boolean SleepLightCheck() {
-        if (lightIntensity < calibratedLight) {
-            return true;
-        }
-        return false;
-    }
-
-    //check to see if audio is below valid level
-
-    /**
-     * SleepAudioCheck()
-     * Checks to see if the sound level is below the valid sleeping sound level
-     *
-     * @return true if sound level is valid, false if sound level is not valid
-     */
-    private boolean SleepAudioCheck() {
-        if (audioAmplitude < calibratedAmplitude) {
-            return true;
-        }
-        return false;
-    }
-
-    //gets duration of sleep to wake time
-
-    /**
-     * getDuration()
-     * Calculates the duration of time slept based on the time the user fell asleep, woke up, and previous
-     * duration during the night
-     *
-     * @return duration of sleep for a night
-     */
-    private float getDuration() {
-        Log.d("getDuration", "Getting current duration...");
-        int newHours;
-        int newMins;
-        double duration;
-
-        //both AM or both PM: simply subtract
-        if ((sleepAmPm.equals("PM") && wakeAmPm.equals("PM")) || (sleepAmPm.equals("AM") && wakeAmPm.equals("AM"))) {
-            newHours = Math.abs(sleepHour - wakeHour);
-            newMins = Math.abs(sleepMin - wakeMin);
-//            Log.d("getDuration1", "newHours: " + Integer.toString(newHours));
-//            Log.d("getDuration1", "newMins: " + Integer.toString(newMins));
-        }
-        //crossed over midnight: have to take day change into account
-        else {
-            //take into account waking up in the midnight hour
-            if(wakeHour == 12 && wakeAmPm.equals("AM")){
-                wakeHour = 0;
-            }
-
-            newHours = (12 - sleepHour) + wakeHour - 1;
-            newMins = (60 - sleepMin) + wakeMin;
-            //           Log.d("getDuration2", "newHours: " + Integer.toString(newHours));
-            //           Log.d("getDuration2", "newMins: " + Integer.toString(newMins));
-        }
-
-        //check for full hour
-        if(newHours == 1 && sleepMin > wakeMin){
-            newHours--;
-            newMins = (60 - sleepMin) + wakeMin;
-//            Log.d("getDuration3", "newHours: " + Integer.toString(newHours));
-//            Log.d("getDuration3", "newMins: " + Integer.toString(newMins));
-
-        }
-
-        //add appropriate minutes
-        if (newMins >= 60) {
-            newMins -= 60;
-            newHours += 1;
-//            Log.d("getDuration4", "newHours: " + Integer.toString(newHours));
-//            Log.d("getDuration4", "newMins: " + Integer.toString(newMins));
-        }
-
-//        Log.d("getDuration", "newHours: " + Integer.toString(newHours));
-//        Log.d("getDuration", "newMins: " + Integer.toString(newMins));
-        //convert to hours and partial hours
-        duration = newHours + (newMins / 60.0);
-
-//      Log.d("getDuration", "duration: " + Float.toString((float)duration));
-
-        return (float)duration;
-    }
 
     public long updateDailyCalorie(){
         List<String> rawDataSets = HistoryApiManager.getInstance(mClient,this).getDailyActivitiesTime();
