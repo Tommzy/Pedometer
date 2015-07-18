@@ -1,45 +1,38 @@
 package com.pedometer.tommzy.pedometer.services;
 /**
-* SleepService.java
-* Sam Fitness
-*
-* @version 1.0.0
-*
-* @author Jake Haas
-* @author Evan Safford
-* @author Nate Ford
-* @author Haley Andrews
-*
-* Copyright (c) 2014, 2015. Wellness-App-MQP. All Rights Reserved.
-*
-* THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
-* KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-* IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-* PARTICULAR PURPOSE.
-*/
+ * SleepService.java
+ * Sam Fitness
+ *
+ * @version 1.0.0
+ *
+ * @author Jake Haas
+ * @author Evan Safford
+ * @author Nate Ford
+ * @author Haley Andrews
+ *
+ * Copyright (c) 2014, 2015. Wellness-App-MQP. All Rights Reserved.
+ *
+ * THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ * KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+ * PARTICULAR PURPOSE.
+ */
 
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.media.MediaRecorder;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.TextView;
-import android.widget.Toast;
 
 
 import com.pedometer.tommzy.pedometer.PowerConnectionReceiver;
-import com.pedometer.tommzy.pedometer.Utils;
+import Util.Utils;
 
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -47,7 +40,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.Timer;
-import java.util.TimerTask;
 
 public class SleepService extends Service {
     public static final String TAG = "SleepSerivce";
@@ -99,7 +91,6 @@ public class SleepService extends Service {
 
     private final BroadcastReceiver recieveFromSleepService = new BroadcastReceiver() {
         @Override
-
         public void onReceive(Context context, Intent intent) {
 
             String action = intent.getAction();
@@ -119,6 +110,12 @@ public class SleepService extends Service {
 
                     audioAmplitude = Integer.parseInt(maxAmplitudeIn);
                     lightIntensity = Float.parseFloat(lightIntensityIn);
+//                    Log.i(TAG,"Received Light Valoue Changed: "
+//                            +"Sound: "
+//                            +audioAmplitude
+//                            +"  "
+//                            +"lightIntensity: "
+//                            +Float.toString(lightIntensity));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -137,6 +134,8 @@ public class SleepService extends Service {
                     stationary=0.00;
                 }
             }
+            calibrateSensors();
+            checkSleepStatus();
         }
     };
 
@@ -198,34 +197,40 @@ public class SleepService extends Service {
      */
     private void calibrateSensors() {
 
-        calibratedLight = 0;
-        calibratedAmplitude = 0;
+//        calibratedLight = 0;
+//        calibratedAmplitude = 0;
         avgBy = -1; //first light value is 0 and needs to be disregarded
 
-        calibrateTimer = new CountDownTimer((CALIBRATE_TIME * 1000), 1000) {
-            public void onTick(long millisUntilFinished) {
-                //add up total values for averaging
-                calibratedLight += lightIntensity;
-                calibratedAmplitude += audioAmplitude;
-                avgBy++;
-            }
+//        calibrateTimer = new CountDownTimer((CALIBRATE_TIME * 1000), 1000) {
+//            public void onTick(long millisUntilFinished) {
+//                //add up total values for averaging
+//                calibratedLight += lightIntensity;
+//                calibratedAmplitude += audioAmplitude;
+//                avgBy++;
+//            }
+//
+//            public void onFinish() {
+//                //calculate avgs
+//                calibratedLight = Math.round(calibratedLight / avgBy);
+//                calibratedAmplitude = calibratedAmplitude / Math.round(avgBy);
+//
+//                //after averages are calculated, add in some margin of noise/light
+//                calibratedLight += LIGHT_MARGIN;
+//                calibratedAmplitude += NOISE_MARGIN;
+//
+//                Log.d("SleepMonitor", "Calibrated sensors");
+//
+//                checkSleepStatus();
+//
+//                calibrateTimer.cancel();
+//            }
+//        }.start();
 
-            public void onFinish() {
-                //calculate avgs
-                calibratedLight = Math.round(calibratedLight / avgBy);
-                calibratedAmplitude = calibratedAmplitude / Math.round(avgBy);
+        //add up total values for averaging
+        calibratedLight += lightIntensity;
+        calibratedAmplitude += audioAmplitude;
+        avgBy++;
 
-                //after averages are calculated, add in some margin of noise/light
-                calibratedLight += LIGHT_MARGIN;
-                calibratedAmplitude += NOISE_MARGIN;
-
-                Log.d("SleepMonitor", "Calibrated sensors");
-
-                checkSleepStatus();
-
-                calibrateTimer.cancel();
-            }
-        }.start();
     }
 
 
@@ -241,7 +246,7 @@ public class SleepService extends Service {
         if (!SleepHourCheck()) {
             Log.d("StopSleepTracking:", "Outside hour range.");
             stopSleepTracking();
-        }         else {
+        }else {
             // Check all conditions to see if user fell asleep
             if (!isAsleep && SleepHourCheck() && SleepLightCheck() && SleepAudioCheck()) {
                 Log.d("SleepMonitor", "Fell Asleep:" + fallAsleepTime);
@@ -249,6 +254,13 @@ public class SleepService extends Service {
                 if(getSleepSum()>75) {
                     isAsleep = true;
                     fallAsleepTime = getTime('S');
+
+                    Log.i(TAG, "Light Valoue Changed: "
+                            + "Sound: "
+                            + audioAmplitude
+                            + "  "
+                            + "lightIntensity: "
+                            + Float.toString(lightIntensity));
                 }else{
                     isAsleep=false;
                 }
@@ -278,6 +290,7 @@ public class SleepService extends Service {
                 Utils.todaysSleepHours += Float.valueOf(totalDuration);
                 //TODO Ã¿ÌìÇåÁã
             }
+            Log.i(TAG,"TodaysSleepHourse"+Utils.todaysSleepHours);
         }
     }
 
@@ -394,12 +407,21 @@ public class SleepService extends Service {
      */
     double sleeplight=0.00;
     private boolean SleepLightCheck() {
+        //chect current calibrated light value is normal or not.
+        if(calibratedLight>10){
+            return false;
+        }
+
+        //check lightIntensity is going down or not?
+        //using current lightIntensity : using calibrated intensity
         if (lightIntensity < calibratedLight) {
-            sleeplight=(1-(lightIntensity/calibratedAmplitude))*4.15;
-            if(sleeplight<2.5){
+            sleeplight = (1 - (lightIntensity / calibratedLight)) * 4.15;//get weighted sleeplight value
+            if (sleeplight < 2.5) {
                 return false;
             }
             return true;
+        } else {
+            sleeplight = (1 - (calibratedLight / 3))*4.15;//get weighted sleeplight value from model data pattern
         }
         sleeplight=0;
         return false;
@@ -413,14 +435,22 @@ public class SleepService extends Service {
      */
     double audioValue=0.00;
     private boolean SleepAudioCheck() {
+        //chect current calibrated light value is normal or not.
+        if(calibratedAmplitude>2000){
+            return false;
+        }
 
         if (audioAmplitude < calibratedAmplitude) {
-            audioValue=(1-(audioAmplitude/calibratedAmplitude))*(34.84);
-            if(audioValue<30){
+            audioValue = (1 - (audioAmplitude / calibratedAmplitude)) * (34.84);
+            if (audioValue < 30) {
                 return false;
             }
+            Log.i(TAG, "calibratedAmtitude: " + calibratedAmplitude);
             return true;
+        }else{
+            audioValue=(1-(calibratedAmplitude/200))*34.84;
         }
+
         audioValue=0;
         return false;
     }

@@ -490,7 +490,7 @@ public class PedoActivity extends ActionBarActivity implements IStepView {
 //        registerReceiver(receiver, filter);
 
         mClient.connect();
-//        startSleepService();
+        startSleepService();
 
     }
 

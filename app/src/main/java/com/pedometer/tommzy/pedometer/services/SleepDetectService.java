@@ -10,7 +10,7 @@ import android.media.MediaRecorder;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.pedometer.tommzy.pedometer.Utils;
+import Util.Utils;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -45,7 +45,12 @@ public class SleepDetectService extends Service {
 
         // Set up media recorder
         mRecorder = new MediaRecorder();
-        mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        try {
+            mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        }catch (IllegalStateException e){
+            Log.i(TAG,"setup Audio Source failed");
+        }
+
         mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
         mRecorder.setOutputFile(Utils.getAudioSampleFilePath(this));
         mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
@@ -56,6 +61,7 @@ public class SleepDetectService extends Service {
         @Override
         public void onSensorChanged(SensorEvent event) {
             lightIntensity = event.values[0];
+            sampleSensors();
         }
 
         @Override

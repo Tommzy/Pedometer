@@ -17,7 +17,7 @@
  * PARTICULAR PURPOSE.
  */
 
-package com.pedometer.tommzy.pedometer;
+package Util;
 
 import android.app.Activity;
 import android.app.ActivityManager;
