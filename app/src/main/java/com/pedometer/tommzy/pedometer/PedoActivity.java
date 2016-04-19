@@ -107,45 +107,7 @@ public class PedoActivity extends ActionBarActivity implements IStepView {
     private ActionBarDrawerToggle mDrawerToggle;
 
 
-    // Raw Sensor Data
-    private int audioAmplitude;
-    private float lightIntensity;
 
-    // Final Sleep Times
-    private String fallAsleepTime = "";
-    private String wakeUpTime = "";
-    private int sleepHour;
-    private int sleepMin;
-    private String sleepAmPm;
-    private int wakeHour;
-    private int wakeMin;
-    private String wakeAmPm;
-    private float totalDuration = 0.0F;
-
-    // Calibrated Sensor Data (defaults set if left uncalibrated)
-    private float calibratedLight = 15;
-    private int calibratedAmplitude = 200;
-    private int calibratedSleepHour = 8;
-    private int calibratedWakeHour = 12;
-
-    // Calibration
-    private final int CALIBRATE_TIME = 10;
-    private final int NOISE_MARGIN = 200;
-    private final int LIGHT_MARGIN = 15;
-    private CountDownTimer calibrateTimer;
-    private float avgBy = 0;
-    private int threshold = 3;
-    private int wakeup = 0;
-
-    // Tracking Statuses
-    private boolean isTracking = true;
-    private boolean isAsleep = false;
-    private int numWakeups = 0;
-    private int efficiency;
-
-    SimpleDateFormat dateFormat;
-    private int date;
-    private Date now;
 
 
 
@@ -487,7 +449,7 @@ public class PedoActivity extends ActionBarActivity implements IStepView {
 //                }
             }
         };
-//        registerReceiver(receiver, filter);
+        registerReceiver(receiver, filter);
 
         mClient.connect();
         startSleepService();
@@ -702,6 +664,8 @@ public class PedoActivity extends ActionBarActivity implements IStepView {
             mClient.disconnect();
         }
         stopService(new Intent(PedoActivity.this,ActivityRecognitionIntentService.class));
+        stopService(new Intent(PedoActivity.this,SleepDetectService.class));
+        stopService(new Intent(PedoActivity.this,SleepService.class));
     }
 
     @Override

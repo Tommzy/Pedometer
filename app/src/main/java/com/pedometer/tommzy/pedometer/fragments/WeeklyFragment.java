@@ -147,6 +147,13 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
         ArrayList<BarEntry> weeklyRunningTime = new ArrayList<>();
         ArrayList<BarEntry> weeklyCyclingTime = new ArrayList<>();
         ArrayList<BarEntry> weeklyDrivingTime = new ArrayList<>();
+        ArrayList<BarEntry> weeklySleepTime = new ArrayList<>();
+
+        int ct;
+        weeklySleepTime.clear();
+        for(ct = 0; ct<7;ct++){
+            weeklySleepTime.add(new BarEntry((float) ((double)Math.random()*640),ct));
+        }
 
         //rewrite here instead of hard code
         ArrayList<BarEntry> first = new ArrayList<>();
@@ -221,6 +228,10 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
                 BarEntry entry4 = weeklyCyclingTime.get(cnt);
                 entry4.setXIndex(3);
                 first.add(entry4);
+
+                BarEntry entry5 = weeklySleepTime.get(cnt);
+                entry5.setXIndex(4);
+                first.add(entry5);
             }else if (cnt ==1){
                 BarEntry entry1 = weeklyWalkTime.get(cnt);
                 entry1.setXIndex(0);
@@ -237,6 +248,10 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
                 BarEntry entry4 = weeklyCyclingTime.get(cnt);
                 entry4.setXIndex(3);
                 second.add(entry4);
+
+                BarEntry entry5 = weeklySleepTime.get(cnt);
+                entry5.setXIndex(4);
+                second.add(entry5);
             }else if (cnt ==2){
                 BarEntry entry1 = weeklyWalkTime.get(cnt);
                 entry1.setXIndex(0);
@@ -253,6 +268,10 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
                 BarEntry entry4 = weeklyCyclingTime.get(cnt);
                 entry4.setXIndex(3);
                 third.add(entry4);
+
+                BarEntry entry5 = weeklySleepTime.get(cnt);
+                entry5.setXIndex(4);
+                third.add(entry5);
             }else if (cnt ==3){
                 BarEntry entry1 = weeklyWalkTime.get(cnt);
                 entry1.setXIndex(0);
@@ -269,6 +288,10 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
                 BarEntry entry4 = weeklyCyclingTime.get(cnt);
                 entry4.setXIndex(3);
                 fourth.add(entry4);
+
+                BarEntry entry5 = weeklySleepTime.get(cnt);
+                entry5.setXIndex(4);
+                fourth.add(entry5);
             }else if (cnt ==4){
                 BarEntry entry1 = weeklyWalkTime.get(cnt);
                 entry1.setXIndex(0);
@@ -285,6 +308,10 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
                 BarEntry entry4 = weeklyCyclingTime.get(cnt);
                 entry4.setXIndex(3);
                 fifth.add(entry4);
+
+                BarEntry entry5 = weeklySleepTime.get(cnt);
+                entry5.setXIndex(4);
+                fifth.add(entry5);
             }else if (cnt ==5){
                 BarEntry entry1 = weeklyWalkTime.get(cnt);
                 entry1.setXIndex(0);
@@ -301,6 +328,10 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
                 BarEntry entry4 = weeklyCyclingTime.get(cnt);
                 entry4.setXIndex(3);
                 sixth.add(entry4);
+
+                BarEntry entry5 = weeklySleepTime.get(cnt);
+                entry5.setXIndex(4);
+                sixth.add(entry5);
             }else if (cnt ==6){
                 BarEntry entry1 = weeklyWalkTime.get(cnt);
                 entry1.setXIndex(0);
@@ -317,6 +348,10 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
                 BarEntry entry4 = weeklyCyclingTime.get(cnt);
                 entry4.setXIndex(3);
                 seventh.add(entry4);
+
+                BarEntry entry5 = weeklySleepTime.get(cnt);
+                entry5.setXIndex(4);
+                seventh.add(entry5);
             }
         }
 
@@ -347,7 +382,7 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
         Log.i(TAG,fourthB.toString());
         Log.i(TAG,fifthB.toString());
         Log.i(TAG,sixthB.toString());
-        Log.i(TAG,seventhB.toString());
+        Log.i(TAG, seventhB.toString());
 
 
         ArrayList<String> labels = new ArrayList<String>();
@@ -356,6 +391,7 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
         labels.add("Running");
         labels.add("Driving");
         labels.add("Cycling");
+        labels.add("Sleeping");
 
 
         Log.i(TAG,labels.toString());

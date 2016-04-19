@@ -141,6 +141,7 @@ public class DailyFragment extends Fragment implements OnChartGestureListener {
             i++;
         }
 
+        entries.add(new BarEntry(357,i));
         sets = new BarDataSet(entries, "Daily Activities In Minutes");
         Log.i(TAG,entries.toString());
         sets.setColors(ColorTemplate.VORDIPLOM_COLORS);
@@ -152,6 +153,7 @@ public class DailyFragment extends Fragment implements OnChartGestureListener {
         labels.add("Driving");
         labels.add("Running");
         labels.add("Cycling");
+        labels.add("Sleeping");
 
         Log.i(TAG,labels.toString());
 

@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 21
+    compileSdkVersion 23
     buildToolsVersion "21.1.2"
     defaultConfig {
         applicationId "com.pedometer.tommzy.pedometer"
-        minSdkVersion 21
-        targetSdkVersion 21
+        minSdkVersion 23
+        targetSdkVersion 23
         versionCode 1
         versionName "1.0"
     }
@@ -27,11 +27,11 @@ repositories {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:22.0.0'
-    compile 'com.google.android.gms:play-services:7.0.0'
-    compile 'com.google.android.gms:play-services-fitness:7.0.+'
-    compile 'com.google.android.gms:play-services-wearable:7.0.0'
+    compile 'com.android.support:appcompat-v7:23.0.0'
+    compile 'com.google.android.gms:play-services:8.4.0'
+    compile 'com.google.android.gms:play-services-fitness:8.4.0'
+    compile 'com.google.android.gms:play-services-wearable:8.4.0'
     compile 'com.github.lzyzsd:circleprogress:1.1.0@aar'
-    compile 'com.android.support:support-v4:22.0.0'
+    compile 'com.android.support:support-v4:21.0.0'
     compile 'com.github.PhilJay:MPAndroidChart:v2.0.9'
 }
