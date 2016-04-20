@@ -42,11 +42,13 @@ public class HistoryApiManager {
     long drivingTime = 0;
     long runningTime = 0;
     long cyclingTime = 0;
+    long sleepingTime = 0;
     private List<Integer> weekySteps = new ArrayList<Integer>();
     private List<Long> weeklyWalkTime = new ArrayList<Long>();
     private List<Long> weeklyRunningTime = new ArrayList<Long>();
     private List<Long> weeklyCyclingTime = new ArrayList<Long>();
     private List<Long> weeklyDrivingTime = new ArrayList<Long>();
+    private List<Long> weeklySleepingTime = new ArrayList<Long>();
     private IStepView activity;
 
 
@@ -286,6 +288,19 @@ public class HistoryApiManager {
                         }
                     }
 
+                }else if (ActivityRecognitionIntentService.
+                        getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0)))))
+                        .equalsIgnoreCase("sleeping")){
+
+                    for(Field field : dp.getDataType().getFields()) {
+                        Log.i(TAG, "\tField: " + field.getName() +
+                                " Value: " + dp.getValue(field));
+                        if(field.getName().equalsIgnoreCase("duration")){
+
+                            sleepingTime=Long.valueOf(String.valueOf(dp.getValue(field)));
+                        }
+                    }
+
                 }else{
                     for(Field field : dp.getDataType().getFields()) {
                         Log.i(TAG, "\tField: " + field.getName() +
@@ -312,6 +327,7 @@ public class HistoryApiManager {
         boolean running = false;
         boolean cycling = false;
         boolean driving = false;
+        boolean sleeping=false;
 
         for (DataPoint dp : dataSet.getDataPoints()) {
             Log.i(TAG, dp.getDataType().getFields().get(0).getName());
@@ -393,7 +409,19 @@ public class HistoryApiManager {
                             walk=true;
                         }
                     }
+                }
+                else if (ActivityRecognitionIntentService.
+                        getNameFromType(Integer.valueOf(String.valueOf(dp.getValue(dp.getDataType().getFields().get(0)))))
+                        .equalsIgnoreCase("sleeping")) {
 
+                    for (Field field : dp.getDataType().getFields()) {
+                        Log.i(TAG, "\tField: " + field.getName() +
+                                " Value: " + dp.getValue(field));
+                        if (field.getName().equalsIgnoreCase("duration")) {
+                            weeklySleepingTime.add((long) dp.getValue(field).asInt());
+                            sleeping = true;
+                        }
+                    }
                 }else{
                     for(Field field : dp.getDataType().getFields()) {
                         Log.i(TAG, "\tField: " + field.getName() +
@@ -420,6 +448,9 @@ public class HistoryApiManager {
             }
             if(!driving){
                 weeklyDrivingTime.add((long) 0);
+            }
+            if(!sleeping){
+                weeklySleepingTime.add((long) 0);
             }
         }
     }
@@ -484,8 +515,9 @@ public class HistoryApiManager {
         dailyActivitiesTime.add(String.valueOf(drivingTime));
         dailyActivitiesTime.add(String.valueOf(runningTime));
         dailyActivitiesTime.add(String.valueOf(cyclingTime));
+        dailyActivitiesTime.add(String.valueOf(sleepingTime));
 
-        Log.d(TAG, dailyActivitiesTime.toString());
+        Log.d(TAG, "Daily"+dailyActivitiesTime.toString());
 
         return dailyActivitiesTime;
     }
@@ -518,12 +550,14 @@ public class HistoryApiManager {
         }
         weeklyActivitiesTime.add(weeklyDrivingTimeString);
 
-        Log.d(TAG, weeklyActivitiesTime.toString());
+        ArrayList<String> weeklySleepingTimeString = new ArrayList<String>();
+        for(Long time: weeklySleepingTime){
+            weeklySleepingTimeString.add(time.toString());
+        }
+        weeklyActivitiesTime.add(weeklySleepingTimeString);
+
+        Log.d(TAG, "Weekly: "+weeklyActivitiesTime.toString());
 
         return weeklyActivitiesTime;
     }
-
-
-
-
 }

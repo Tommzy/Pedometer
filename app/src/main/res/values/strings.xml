@@ -5,6 +5,7 @@
     <string name="drawer_menu">Activity Menu</string>
     <string name="step_goal">Daily Step Goal</string>
     <string name="step_goal_sum">Set your daily Step Goal Here! </string>
+    <string name="google_app_id">Pedometer</string>
 
     //navigation drawer list
     <string-array name="functions_array">

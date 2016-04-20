@@ -264,6 +264,7 @@ public class SleepService extends Service {
                 Log.d("getDuration", "Adding " + Float.toString(getDuration()));
 
                 Utils.todaysSleepHours += Float.valueOf(totalDuration);
+                //TODO: add sleep hours here!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             }
             Log.i(TAG, "TodaysSleepHourse"+Utils.todaysSleepHours);
         }

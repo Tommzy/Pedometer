@@ -691,7 +691,7 @@ public class PedoActivity extends ActionBarActivity implements IStepView {
 
     public void updateViewStepCounter(int count){
         dailyStepCount = count + dailyStepCount;
-        calorie = updateDailyCalorie();
+//        calorie = updateDailyCalorie();
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

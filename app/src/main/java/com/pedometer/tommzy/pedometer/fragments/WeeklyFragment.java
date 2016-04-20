@@ -44,10 +44,7 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
         Typeface tf;
 
         super.onCreateView(inflater, container, savedInstanceState);
-        Log.i(TAG, "finish super call!");
         View weeklyLayout = inflater.inflate(R.layout.weekly_activity, null);
-        Log.i(TAG,"finish Inflate!!");
-        Log.i(TAG, "I get called!");
 
         // create a new chart object
         mChart = new BarChart(getActivity());
@@ -129,10 +126,6 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
 
     protected BarData generateBarData(List<ArrayList<String>> rawDataSets) {
 
-//        BarDataSet walkingSet ;
-//        BarDataSet runningSet;
-//        BarDataSet cyclingSet;
-//        BarDataSet DrivingSet;
         BarDataSet firstB ;
         BarDataSet secondB ;
         BarDataSet thirdB ;
@@ -151,9 +144,9 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
 
         int ct;
         weeklySleepTime.clear();
-        for(ct = 0; ct<7;ct++){
-            weeklySleepTime.add(new BarEntry((float) ((double)Math.random()*640),ct));
-        }
+//        for(ct = 0; ct<7;ct++){
+//            weeklySleepTime.add(new BarEntry((float) ((double)Math.random()*640),ct));
+//        }
 
         //rewrite here instead of hard code
         ArrayList<BarEntry> first = new ArrayList<>();
@@ -170,6 +163,7 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
         boolean runningFlag=false;
         boolean cyclingFlag=false;
         boolean drivingFlag=false;
+        boolean sleepingFlag=false;
 
 
         Iterator itr = rawDataSets.iterator();
@@ -206,6 +200,13 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
                     i++;
                 }
                 drivingFlag=true;
+            }else if(!sleepingFlag) {
+                i = 0;
+                for (String dataEntry : data) {
+                    weeklySleepTime.add(new BarEntry(Integer.valueOf(dataEntry) / 60000, i));
+                    i++;
+                }
+                sleepingFlag = true;
             }else{
                 Log.i(TAG, "get unexpected data!");
             }
@@ -382,7 +383,7 @@ public class WeeklyFragment extends Fragment implements OnChartGestureListener {
         Log.i(TAG,fourthB.toString());
         Log.i(TAG,fifthB.toString());
         Log.i(TAG,sixthB.toString());
-        Log.i(TAG, seventhB.toString());
+        Log.i(TAG,seventhB.toString());
 
 
         ArrayList<String> labels = new ArrayList<String>();

@@ -106,6 +106,8 @@ public class ActivityRecognitionIntentService extends IntentService {
                 return "running";
             case DetectedActivity.WALKING:
                 return "walking";
+            case 72:
+                return "sleeping";
         }
         return "unknown";
     }
