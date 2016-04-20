@@ -818,6 +818,8 @@ public class PedoActivity extends ActionBarActivity implements IStepView {
                 String data = (String) itr.next();
                 calorie = calorie + calculateCalorie(Integer.valueOf(data), DetectedActivity.ON_BICYCLE);
                 i++;
+            }else{
+                itr.next();
             }
         }
 
