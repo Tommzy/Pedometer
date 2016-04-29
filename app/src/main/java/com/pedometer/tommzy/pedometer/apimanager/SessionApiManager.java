@@ -37,7 +37,7 @@ public class SessionApiManager {
     private Session newSession;
     private int cnt = 0;
     private boolean resultFlag;
-    Calendar calendar;
+    private Calendar calendar;
 
     private long startTime, endTime;
 

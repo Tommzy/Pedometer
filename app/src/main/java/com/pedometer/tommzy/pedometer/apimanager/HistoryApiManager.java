@@ -201,6 +201,7 @@ public class HistoryApiManager {
         Log.i(TAG,"weeklyrunningtime"+weeklyRunningTime.toString());
         Log.i(TAG,"weeklycyclingtime"+weeklyCyclingTime.toString());
         Log.i(TAG,"weeklydrivingtime"+weeklyDrivingTime.toString());
+        Log.i(TAG,"weeklysleepingtime"+weeklySleepingTime.toString());
     }
 
 

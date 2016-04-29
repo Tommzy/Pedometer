@@ -405,7 +405,8 @@ public class PedoActivity extends ActionBarActivity implements IStepView {
 
                     if((!activityType.equalsIgnoreCase("unknown"))
                             &&(!activityType.equalsIgnoreCase("still"))
-                            &&(!activityType.equalsIgnoreCase("tilting"))){
+                            &&(!activityType.equalsIgnoreCase("tilting"))
+                            &&(!activityType.equalsIgnoreCase("sleeping"))){
 
                         if(getActivityType(activityType)!=null){
                             setUpSession(getActivityType(activityType));
@@ -413,6 +414,11 @@ public class PedoActivity extends ActionBarActivity implements IStepView {
                             Log.i("Returned Null!!!!!",activityType);
                         }
 
+                    }else if (activityType.equalsIgnoreCase("sleeping")){
+                        long start= extra.getLong("start");
+                        long end= extra.getLong("end");
+                        sessionApiManager.insertSession(start,end,"sleep");
+                        Log.i("The sleeping session added", activityType);
                     }else{
                         if(currentActivity!=null) {
                             stopCurrentSession();
