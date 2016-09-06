@@ -20,19 +20,16 @@ import android.util.Log;
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
 import java.util.List;
-
 /**
  * Created by Hui Zheng on 4/16/2015.
  * This service will return the strongest probability of current activity
  * 1.walking 2. running 3. tilting 3.unknown 4. cycling 5. driving
  */
 public class ActivityRecognitionIntentService extends IntentService {
-
     public ActivityRecognitionIntentService() {
         super("ActivityRecognitionIntent");
         Log.v("ActivityRecognitionIntentService","Loading");
     }
-
     /**
      * filter out the most probable activity
      * @param intent the intent that
@@ -45,7 +42,6 @@ public class ActivityRecognitionIntentService extends IntentService {
             DetectedActivity activity = result.getMostProbableActivity();
             //get the type of the activity
             int type = activity.getType();
-
             if (type == DetectedActivity.ON_FOOT) {
                 DetectedActivity betterActivity = walkingOrRunning(result.getProbableActivities());
                 if (null != betterActivity) {
@@ -53,15 +49,12 @@ public class ActivityRecognitionIntentService extends IntentService {
                     type = activity.getType();
                 }
             }
-
             Log.i("Activity detected: ", getNameFromType(type));
-
             Intent mIntent = new Intent("Activity_Message")
                     .putExtra("ActivityType", getNameFromType(type));
             this.sendBroadcast(mIntent);
         }
     }
-
     /**
      * choose secondary activity from on foot
      * @param probableActivities on_foot
@@ -73,16 +66,13 @@ public class ActivityRecognitionIntentService extends IntentService {
         for (DetectedActivity activity : probableActivities) {
             if (activity.getType() != DetectedActivity.RUNNING && activity.getType() != DetectedActivity.WALKING)
                 continue;
-
             if (activity.getConfidence() > confidence) {
                 myActivity = activity;
                 break;
             }
         }
-
         return myActivity;
     }
-
     /**
      * convert integer value of activity type to string
      * @param activityType integer value of activity type
@@ -111,7 +101,6 @@ public class ActivityRecognitionIntentService extends IntentService {
         }
         return "unknown";
     }
-
 
     @Override
     public void onDestroy() {

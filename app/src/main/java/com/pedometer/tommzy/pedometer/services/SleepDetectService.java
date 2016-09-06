@@ -28,28 +28,22 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 import Util.Utils;
-
-
 public class SleepDetectService extends Service {
     private static final int SAMPLE_RATE = 5000;
     private static final String TAG = "SleepDetectService";
-
     private MediaRecorder mRecorder;
     private SensorManager sensorMgr = null;
     private Sensor lightSensor = null;
     private float lightIntensity;
     private Timer timer;
-
     @Override
     public IBinder onBind(Intent intent) {
         throw null;
     }
-
     @Override
     public void onCreate() {
         super.onCreate();
         Log.i(TAG, "SleepService onCreate");
-
         // Create the calibrateTimer
         timer = new Timer();
         // Set up light sensor
@@ -67,7 +61,6 @@ public class SleepDetectService extends Service {
         mRecorder.setOutputFile(Utils.getAudioSampleFilePath(this));
         mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
     }
-
     //setup and instantiate sensor listener here
     private SensorEventListener sensorListener = new SensorEventListener() {
         @Override
@@ -75,50 +68,37 @@ public class SleepDetectService extends Service {
             float max = event.values[0];
             lightIntensity = max > lightIntensity? max:lightIntensity;
         }
-
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
         }
     };
-
     @Override
     public void onDestroy() {
         Log.d("SleepService", "onDestroy");
         // Stop the calibrateTimer
         timer.cancel();
-
         // Stop the audio recorder
         mRecorder.stop();
         mRecorder.release();
         mRecorder = null;
-
         stopSelf();
     }
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startid) {
-        Log.d("SleepService", "onStartCommand");
-
         try {
             mRecorder.prepare();
         } catch (IOException e) {
             Log.e("SleepService", "MediaRecorder prepare() failed");
         }
-
         // Start the audio recorder
         mRecorder.start();
-
         // Start the light sensor
         sensorMgr.registerListener(sensorListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
-
         // Start sampling the sensors
         sampleSensors();
-
         // Don't want to auto restart the service
         return START_NOT_STICKY;
     }
-
-
     /**
      * sampleSensors()
      * Gets light and sound data from sensors at a fixed rate and sends broadcast with the values in
@@ -132,9 +112,7 @@ public class SleepDetectService extends Service {
                 i.putExtra("maxAmplitude", Integer.toString(mRecorder.getMaxAmplitude()));
                 i.putExtra("lightIntensity", Float.toString(lightIntensity));
                 sendBroadcast(i);
-
             }
         }, 0, SAMPLE_RATE);
     }
-
 }
